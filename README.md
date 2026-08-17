@@ -1,30 +1,49 @@
 # anti-slop
 
-[![skills.sh](https://skills.sh/b/dmmulroy/anti-slop)](https://skills.sh/dmmulroy/anti-slop)
+Opinionated, language-native lint rules that reject low-evidence and low-signal implementation patterns.
 
-Opinionated Oxlint rules that reject low-evidence and low-signal TypeScript and JavaScript patterns.
+Anti-slop is vendored into each repository instead of treated as a fixed runtime dependency. Each language uses its mature native analysis stack rather than a shared parser or compatibility layer.
 
-This project is meant to be vendored, not treated as a fixed npm dependency. Copy the rules into your repository, read them, and change them to match your team's standards. The bundled agent skill handles the initial copy and configuration; after that, the vendored files are yours to maintain and make your own.
+## Supported languages
 
-## Install with an agent skill
+| Language | Implementation | Skill |
+| --- | --- | --- |
+| TypeScript / JavaScript | Oxlint plugin | `install-anti-slop` |
+| Python | Pylint / Astroid checker | `install-anti-slop-python` |
+| Rust | Clippy restriction profile | `install-anti-slop-rust` |
+| Go | `go/analysis` multichecker | `install-anti-slop-go` |
+
+Inspect the available installers:
 
 ```bash
-npx skills add dmmulroy/anti-slop --skill install-anti-slop
+npx skills add AcidicSoil/anti-slop --list
 ```
 
-Then ask your coding agent to install or configure anti-slop in the current repository. The skill copies the plugin, installs current Oxlint dependencies, merges the plugin into the existing lint configuration, enables every rule, and validates the result.
-
-To inspect available skills first:
+Install the language you want, for example:
 
 ```bash
-npx skills add dmmulroy/anti-slop --list
+npx skills add AcidicSoil/anti-slop --skill install-anti-slop-python
+npx skills add AcidicSoil/anti-slop --skill install-anti-slop-rust
+npx skills add AcidicSoil/anti-slop --skill install-anti-slop-go
+npx skills add AcidicSoil/anti-slop --skill install-anti-slop
 ```
 
-## Manual local installation
+The installer skill inspects the target repository, preserves its package manager and existing lint/type-check tooling, vendors only the language-specific anti-slop layer, and validates the result.
 
-Copy `src/` into the target repository, for example at `tools/oxlint/anti-slop/`, and install matching current versions of `oxlint` and `@oxlint/plugins`.
+## Policy
 
-Register the copied entry point in `oxlint.config.ts`:
+The language implementations share policy, not parser code:
+
+- preserve known type evidence instead of widening it away;
+- validate uncertain data at boundaries;
+- reject broad anonymous contracts when a named domain contract is available;
+- require explicit justification around unsafe type escapes;
+- prefer static operations over reflection or dynamic access;
+- use the language's maintained built-in lints before creating custom rules.
+
+## TypeScript / JavaScript
+
+`src/` is the canonical Oxlint implementation. Copy it to a target repository such as `tools/oxlint/anti-slop/`, install current matching versions of `oxlint` and `@oxlint/plugins`, and register the copied entry point.
 
 ```ts
 import { defineConfig } from "oxlint";
@@ -67,155 +86,33 @@ export default defineConfig({
 });
 ```
 
-The same `ignorePatterns`, `jsPlugins`, and rules work under `lint` in a Vite+ config. Merge the ignore patterns into Vite+'s `fmt.ignorePatterns` as well so `vp check` does not reformat installed agent assets or the vendored plugin. Preserve existing ignores and add any other project-local agent tooling directories detected in the repository; do not broadly ignore every dot-directory.
+## Python
 
-## Rules
+`languages/python/anti_slop.py` is a Pylint plugin with five initial rules:
 
-- `no-chained-type-assertions` — rejects nested type assertions that fabricate evidence.
-- `no-conditional-empty-object-spread` — rejects conditional spreads that use `{}` to omit fields.
-- `no-known-value-widening` — rejects explicit broad target types that discard known value evidence.
-- `no-module-mocking` — rejects Vitest and Jest module mocks in favor of real dependency seams.
-- `no-object-parameters` — rejects the broad `object` type on function inputs.
-- `no-reflect-apply` — rejects `Reflect.apply` in favor of typed function calls.
-- `no-reflect-get` — rejects `Reflect.get` in favor of typed property access or boundary parsing.
-- `no-runtime-typeof` — requires boundary parsing instead of ad hoc `typeof` narrowing.
-- `no-shape-in-symbol-names` — rejects `shape` in symbol names.
-- `no-unknown-parameters` — rejects `unknown` inputs except the explicit `cause` convention.
-- `no-unknown-returns` — rejects function contracts that return `unknown` or `Promise<unknown>`.
-- `no-unknown-type-aliases` — rejects aliases that merely conceal `unknown`.
-- `no-unsafe-dictionary-type` — rejects dictionary value contracts based on `unknown`, `any`, `object`, `{}`, and semantic equivalents.
-- `no-widen-then-assert` — rejects local flows that widen known values and later assert them back.
-- `require-safety-comment-for-type-assertion` — requires each non-const assertion to document its checked invariant.
+- `no-any-parameter`
+- `no-any-return`
+- `no-unsafe-dictionary-type`
+- `no-chained-cast`
+- `require-safety-comment-for-cast`
 
-## Violation examples
+The Python installer keeps Ruff and existing type checking in place and adds Pylint only for custom rules Ruff cannot load as third-party plugins.
 
-Each snippet below is rejected by the named rule.
+## Rust
 
-### `no-chained-type-assertions`
+`languages/rust/anti-slop-clippy.toml` is the canonical restriction profile. It rejects unchecked unwrap/expect paths, panic placeholders, undocumented unsafe blocks, unsafe transmute patterns, and broad `as` conversions.
 
-```ts
-const user = input as object as User;
-```
+Rust deliberately starts with maintained Clippy rules. Dylint should be introduced only for a future policy Clippy cannot express.
 
-### `no-conditional-empty-object-spread`
+## Go
 
-```ts
-const options = {
-  ...(timeout !== undefined ? { timeout } : {}),
-};
-```
+`languages/go/` contains a real `golang.org/x/tools/go/analysis` multichecker. The initial analyzer rejects:
 
-### `no-known-value-widening`
+- `any` / `interface{}` parameters and returns;
+- `map[string]any` / `map[string]interface{}` contracts;
+- direct `reflect.*` calls.
 
-```ts
-const handlers: Record<string, Handler> = {
-  start: startHandler,
-};
-```
-
-This discards the known `start` key. Preserve inference or use `satisfies Record<string, Handler>` instead.
-
-### `no-module-mocking`
-
-```ts
-vi.mock("./user-store");
-```
-
-### `no-object-parameters`
-
-```ts
-function save(value: object) {}
-```
-
-### `no-reflect-apply`
-
-```ts
-const value = Reflect.apply(operation, owner, args);
-```
-
-### `no-reflect-get`
-
-```ts
-const value = Reflect.get(owner, key);
-```
-
-### `no-runtime-typeof`
-
-```ts
-if (typeof input === "string") {
-  useName(input);
-}
-```
-
-Schema-free projects can permit `typeof` checks directly inside type predicate and
-assertion functions while continuing to reject ad hoc checks elsewhere:
-
-```json
-{
-  "anti-slop/no-runtime-typeof": [
-    "error",
-    { "allowInTypeGuards": true }
-  ]
-}
-```
-
-The option defaults to `false`.
-
-### `no-shape-in-symbol-names`
-
-```ts
-interface UserShape {
-  id: string;
-}
-```
-
-### `no-unknown-parameters`
-
-```ts
-function handle(input: unknown) {}
-```
-
-### `no-unknown-returns`
-
-```ts
-function loadUser(): unknown {
-  return input;
-}
-```
-
-### `no-unknown-type-aliases`
-
-```ts
-type ExternalValue = unknown;
-```
-
-### `no-unsafe-dictionary-type`
-
-```ts
-type Metadata = Record<string, unknown>;
-type OtherMetadata = { [key: string]: object };
-```
-
-### `no-widen-then-assert`
-
-```ts
-const loaded: User = loadUser();
-const stored: unknown = loaded;
-const user = stored as User;
-```
-
-### `require-safety-comment-for-type-assertion`
-
-```ts
-const userId = value as UserId;
-```
-
-Add a specific justification immediately before a necessary assertion:
-
-```ts
-// SAFETY: parseUserId validated the identifier before branding it.
-const userId = value as UserId;
-```
+The installer resolves the current `golang.org/x/tools` release in the target repository instead of pinning a stale toolchain dependency here.
 
 ## Development
 
@@ -224,7 +121,13 @@ pnpm install
 pnpm check
 ```
 
-`src/` is canonical. After changing production source, run `pnpm sync:skill-assets`; CI checks that the skill's bundled copy remains identical.
+Canonical sources are `src/` for TypeScript/JavaScript and `languages/<language>/` for additional languages. After changing a canonical implementation, run:
+
+```bash
+pnpm sync:skill-assets
+```
+
+CI checks that bundled skill assets remain identical to canonical sources.
 
 ## License
 
