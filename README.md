@@ -19,31 +19,34 @@ Inspect the available installers:
 npx skills add AcidicSoil/anti-slop --list
 ```
 
-Install the language you want, for example:
+Install the language you want:
 
 ```bash
+npx skills add AcidicSoil/anti-slop --skill install-anti-slop
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop-python
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop-rust
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop-go
-npx skills add AcidicSoil/anti-slop --skill install-anti-slop
 ```
 
-The installer skill inspects the target repository, preserves its package manager and existing lint/type-check tooling, vendors only the language-specific anti-slop layer, and validates the result.
-
-## Policy
-
-The language implementations share policy, not parser code:
-
-- preserve known type evidence instead of widening it away;
-- validate uncertain data at boundaries;
-- reject broad anonymous contracts when a named domain contract is available;
-- require explicit justification around unsafe type escapes;
-- prefer static operations over reflection or dynamic access;
-- use the language's maintained built-in lints before creating custom rules.
+The installers preserve each repository's existing package manager and lint/type-check tooling. The language implementations share policy rather than parser code: preserve known type evidence, validate uncertain data at boundaries, reject broad anonymous contracts, require justification around unsafe type escapes, and prefer static operations over reflection or dynamic access.
 
 ## TypeScript / JavaScript
 
-`src/` is the canonical Oxlint implementation. Copy it to a target repository such as `tools/oxlint/anti-slop/`, install current matching versions of `oxlint` and `@oxlint/plugins`, and register the copied entry point.
+The original Oxlint implementation remains canonical in `src/`. Copy the rules into your repository, read them, and change them to match your team's standards. The bundled agent skill handles the initial copy and configuration; after that, the vendored files are yours to maintain and make your own.
+
+### Install with an agent skill
+
+```bash
+npx skills add AcidicSoil/anti-slop --skill install-anti-slop
+```
+
+Then ask your coding agent to install or configure anti-slop in the current repository. The skill copies the plugin, installs current Oxlint dependencies, merges the plugin into the existing lint configuration, enables every rule, and validates the result.
+
+### Manual local installation
+
+Copy `src/` into the target repository, for example at `tools/oxlint/anti-slop/`, and install matching current versions of `oxlint` and `@oxlint/plugins`.
+
+Register the copied entry point in `oxlint.config.ts`:
 
 ```ts
 import { defineConfig } from "oxlint";
@@ -86,6 +89,155 @@ export default defineConfig({
 });
 ```
 
+The same `ignorePatterns`, `jsPlugins`, and rules work under `lint` in a Vite+ config. Merge the ignore patterns into Vite+'s `fmt.ignorePatterns` as well so `vp check` does not reformat installed agent assets or the vendored plugin. Preserve existing ignores and add any other project-local agent tooling directories detected in the repository; do not broadly ignore every dot-directory.
+
+### Rules
+
+- `no-chained-type-assertions` — rejects nested type assertions that fabricate evidence.
+- `no-conditional-empty-object-spread` — rejects conditional spreads that use `{}` to omit fields.
+- `no-known-value-widening` — rejects explicit broad target types that discard known value evidence.
+- `no-module-mocking` — rejects Vitest and Jest module mocks in favor of real dependency seams.
+- `no-object-parameters` — rejects the broad `object` type on function inputs.
+- `no-reflect-apply` — rejects `Reflect.apply` in favor of typed function calls.
+- `no-reflect-get` — rejects `Reflect.get` in favor of typed property access or boundary parsing.
+- `no-runtime-typeof` — requires boundary parsing instead of ad hoc `typeof` narrowing.
+- `no-shape-in-symbol-names` — rejects `shape` in symbol names.
+- `no-unknown-parameters` — rejects `unknown` inputs except the explicit `cause` convention.
+- `no-unknown-returns` — rejects function contracts that return `unknown` or `Promise<unknown>`.
+- `no-unknown-type-aliases` — rejects aliases that merely conceal `unknown`.
+- `no-unsafe-dictionary-type` — rejects dictionary value contracts based on `unknown`, `any`, `object`, `{}`, and semantic equivalents.
+- `no-widen-then-assert` — rejects local flows that widen known values and later assert them back.
+- `require-safety-comment-for-type-assertion` — requires each non-const assertion to document its checked invariant.
+
+### Violation examples
+
+Each snippet below is rejected by the named rule.
+
+#### `no-chained-type-assertions`
+
+```ts
+const user = input as object as User;
+```
+
+#### `no-conditional-empty-object-spread`
+
+```ts
+const options = {
+  ...(timeout !== undefined ? { timeout } : {}),
+};
+```
+
+#### `no-known-value-widening`
+
+```ts
+const handlers: Record<string, Handler> = {
+  start: startHandler,
+};
+```
+
+This discards the known `start` key. Preserve inference or use `satisfies Record<string, Handler>` instead.
+
+#### `no-module-mocking`
+
+```ts
+vi.mock("./user-store");
+```
+
+#### `no-object-parameters`
+
+```ts
+function save(value: object) {}
+```
+
+#### `no-reflect-apply`
+
+```ts
+const value = Reflect.apply(operation, owner, args);
+```
+
+#### `no-reflect-get`
+
+```ts
+const value = Reflect.get(owner, key);
+```
+
+#### `no-runtime-typeof`
+
+```ts
+if (typeof input === "string") {
+  useName(input);
+}
+```
+
+Schema-free projects can permit `typeof` checks directly inside type predicate and assertion functions while continuing to reject ad hoc checks elsewhere:
+
+```json
+{
+  "anti-slop/no-runtime-typeof": [
+    "error",
+    { "allowInTypeGuards": true }
+  ]
+}
+```
+
+The option defaults to `false`.
+
+#### `no-shape-in-symbol-names`
+
+```ts
+interface UserShape {
+  id: string;
+}
+```
+
+#### `no-unknown-parameters`
+
+```ts
+function handle(input: unknown) {}
+```
+
+#### `no-unknown-returns`
+
+```ts
+function loadUser(): unknown {
+  return input;
+}
+```
+
+#### `no-unknown-type-aliases`
+
+```ts
+type ExternalValue = unknown;
+```
+
+#### `no-unsafe-dictionary-type`
+
+```ts
+type Metadata = Record<string, unknown>;
+type OtherMetadata = { [key: string]: object };
+```
+
+#### `no-widen-then-assert`
+
+```ts
+const loaded: User = loadUser();
+const stored: unknown = loaded;
+const user = stored as User;
+```
+
+#### `require-safety-comment-for-type-assertion`
+
+```ts
+const userId = value as UserId;
+```
+
+Add a specific justification immediately before a necessary assertion:
+
+```ts
+// SAFETY: parseUserId validated the identifier before branding it.
+const userId = value as UserId;
+```
+
 ## Python
 
 `languages/python/anti_slop.py` is a Pylint plugin with five initial rules:
@@ -102,11 +254,11 @@ The Python installer keeps Ruff and existing type checking in place and adds Pyl
 
 `languages/rust/anti-slop-clippy.toml` is the canonical restriction profile. It rejects unchecked unwrap/expect paths, panic placeholders, undocumented unsafe blocks, unsafe transmute patterns, and broad `as` conversions.
 
-Rust deliberately starts with maintained Clippy rules. Dylint should be introduced only for a future policy Clippy cannot express.
+Rust starts with maintained Clippy rules. Dylint should be introduced only for a policy Clippy cannot express.
 
 ## Go
 
-`languages/go/` contains a real `golang.org/x/tools/go/analysis` multichecker. The initial analyzer rejects:
+`languages/go/` contains a `golang.org/x/tools/go/analysis` multichecker. The initial analyzer rejects:
 
 - `any` / `interface{}` parameters and returns;
 - `map[string]any` / `map[string]interface{}` contracts;
@@ -121,13 +273,7 @@ pnpm install
 pnpm check
 ```
 
-Canonical sources are `src/` for TypeScript/JavaScript and `languages/<language>/` for additional languages. After changing a canonical implementation, run:
-
-```bash
-pnpm sync:skill-assets
-```
-
-CI checks that bundled skill assets remain identical to canonical sources.
+`src/` is canonical for TypeScript/JavaScript. `languages/<language>/` is canonical for additional language implementations. After changing canonical production source, run `pnpm sync:skill-assets`; CI checks that the bundled skill copies remain identical.
 
 ## License
 
