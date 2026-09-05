@@ -1,0 +1,16 @@
+version = 1
+
+[setups.typescript]
+description = "Install the anti-slop Oxlint plugin for TypeScript and JavaScript projects."
+
+[setups.typescript.package_json.devDependencies]
+oxlint = "1.78.0"
+"@oxlint/plugins" = "1.78.0"
+
+[setups.typescript.package_json.scripts]
+"lint:anti-slop" = "oxlint ."
+
+[setups.typescript.files]
+"oxlint.config.ts" = "integrations/oxlint.config.ts"
+"tools/oxlint/anti-slop" = "src"
+"tools/oxlint/anti-slop/LICENSE" = "LICENSE"

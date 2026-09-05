@@ -30,6 +30,18 @@ npx skills add AcidicSoil/anti-slop --skill install-anti-slop-go
 
 The installers preserve each repository's existing package manager and lint/type-check tooling. The language implementations share policy rather than parser code: preserve known type evidence, validate uncertain data at boundaries, reject broad anonymous contracts, require justification around unsafe type escapes, and prefer static operations over reflection or dynamic access.
 
+### Install from StackForge
+
+The repository also exposes a single producer manifest at `stackforge.setups.toml`. StackForge reads canonical files directly from this repository, so there is no duplicated StackForge asset tree to maintain.
+
+```bash
+stackforge setup source add https://github.com/AcidicSoil/anti-slop.git
+stackforge setup apply anti-slop/typescript --dry-run
+stackforge setup apply anti-slop/typescript
+```
+
+Refresh later with `stackforge setup sync anti-slop`.
+
 ## TypeScript / JavaScript
 
 The original Oxlint implementation remains canonical in `src/`. Copy the rules into your repository, read them, and change them to match your team's standards. The bundled agent skill handles the initial copy and configuration; after that, the vendored files are yours to maintain and make your own.
