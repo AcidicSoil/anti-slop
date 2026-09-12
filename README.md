@@ -52,7 +52,7 @@ stackforge setup sync anti-slop
 stackforge setup list
 ```
 
-Use the source-qualified setup ID shown by `stackforge setup list`, for example `anti-slop/typescript`.
+The fork currently publishes `anti-slop/typescript`, `anti-slop/python`, `anti-slop/rust`, and `anti-slop/go`. TypeScript is a complete Stackforge-managed install. Python stages the canonical checker. Rust and Go stage their canonical policy/tool sources for repository-specific Cargo or Go integration because Stackforge does not yet merge those manifest formats.
 
 To inspect available skills first:
 

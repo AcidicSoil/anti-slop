@@ -14,3 +14,21 @@ oxlint = "1.78.0"
 "oxlint.config.ts" = "integrations/oxlint.config.ts"
 "tools/oxlint/anti-slop" = "src"
 "tools/oxlint/anti-slop/LICENSE" = "LICENSE"
+
+[setups.python]
+description = "Stage the Python anti-slop Pylint checker and preserve existing Python tooling."
+
+[setups.python.files]
+"tools/pylint/anti_slop.py" = "languages/python/anti_slop.py"
+
+[setups.rust]
+description = "Stage the Rust anti-slop Clippy policy for review and Cargo lint integration."
+
+[setups.rust.files]
+"tools/anti-slop/rust/anti-slop-clippy.toml" = "languages/rust/anti-slop-clippy.toml"
+
+[setups.go]
+description = "Stage the Go anti-slop analyzer source for repository-local integration."
+
+[setups.go.files]
+"tools/anti-slop" = "languages/go"
