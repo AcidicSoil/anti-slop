@@ -82,6 +82,9 @@ export default defineConfig({
     ".pi/**",
     ".roo/**",
     ".windsurf/**",
+    "**/coverage/**",
+    "**/dist/**",
+    "**/node_modules/**",
     "tools/oxlint/anti-slop/**",
   ],
   jsPlugins: [
@@ -89,6 +92,8 @@ export default defineConfig({
   ],
   rules: {
     "oxc/no-accumulating-spread": "error",
+    "typescript/no-confusing-non-null-assertion": "error",
+    "typescript/no-empty-object-type": "error",
     "anti-slop/no-array-filter-map": "error",
     "anti-slop/no-reduce-accumulator-copy": "error",
     "anti-slop/no-chained-type-assertions": "error",
@@ -112,6 +117,21 @@ export default defineConfig({
 ```
 
 The same `ignorePatterns`, `jsPlugins`, and rules work under `lint` in a Vite+ config. Merge the ignore patterns into Vite+'s `fmt.ignorePatterns` as well so `vp check` does not reformat installed agent assets or the vendored plugin. Preserve existing ignores and add any other project-local agent tooling directories detected in the repository; do not broadly ignore every dot-directory.
+
+### Optional type-aware companion rule
+
+Oxlint 1.86 added `typescript/no-generated-empty-object-type`, which catches type operations that resolve to `{}`. It requires Oxlint type-aware linting. In a TypeScript project that already has a compatible `oxlint-tsgolint`, enable it with:
+
+```ts
+export default defineConfig({
+  options: { typeAware: true },
+  rules: {
+    "typescript/no-generated-empty-object-type": "error",
+  },
+});
+```
+
+Oxlint type-aware linting requires TypeScript 7.0 or newer. Keep `oxlint-tsgolint` compatible with the project's TypeScript version rather than forcing the repository's own pinned type-aware backend onto every consumer.
 
 ### Optional Effect rules
 

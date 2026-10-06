@@ -53,6 +53,9 @@ Complete when the operation and target path are established and pre-existing wor
      ".pi/**",
      ".roo/**",
      ".windsurf/**",
+     "**/coverage/**",
+     "**/dist/**",
+     "**/node_modules/**",
      "tools/oxlint/anti-slop/**",
    ],
    jsPlugins: [
@@ -69,6 +72,8 @@ Complete when the operation and target path are established and pre-existing wor
    ```json
    {
      "oxc/no-accumulating-spread": "error",
+     "typescript/no-confusing-non-null-assertion": "error",
+     "typescript/no-empty-object-type": "error",
      "anti-slop/no-array-filter-map": "error",
      "anti-slop/no-reduce-accumulator-copy": "error",
      "anti-slop/no-chained-type-assertions": "error",
@@ -93,6 +98,8 @@ Complete when the operation and target path are established and pre-existing wor
    For `no-array-filter-map`, prefer lazy `.values().filter(...).map(...).toArray()` pipelines only when the target runtime supports iterator helpers; otherwise use an appropriate single `flatMap` or locally mutating reducer. Review callback order, indexes, sparse arrays, `thisArg`, and filtering semantics rather than mechanically rewriting chains. Unknown receiver types are deliberately not inferred by this AST/scope rule.
 
    Pair `no-reduce-accumulator-copy` with native `oxc/no-accumulating-spread`: the custom rule catches supported non-spread copies such as `Object.assign({}, acc, item)`, `Array.from(acc)`, and array accumulator `concat`/`slice` calls. Mutating a fresh local accumulator is allowed; copying individual input items is also allowed. Named callbacks, indirect helpers, and nested accumulator properties are not fully analyzed, so do not claim all quadratic reducers are ruled out.
+
+   If the repository uses TypeScript 7.0 or newer and already has Oxlint type-aware linting with a compatible `oxlint-tsgolint`, also enable `typescript/no-generated-empty-object-type` at `"error"`. Do not silently force the anti-slop repository's TypeScript 7 type-aware backend onto projects using an older or different TypeScript toolchain; keep the target project's Oxlint/type-aware versions compatible and set `options.typeAware: true`.
 
    If the repository declares `effect` in a package manifest, or the user explicitly requests Effect rules, also register the opt-in Effect plugin:
 
