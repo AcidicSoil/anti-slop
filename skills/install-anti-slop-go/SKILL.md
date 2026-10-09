@@ -1,16 +1,16 @@
 ---
 name: install-anti-slop-go
-description: Install and configure the Go anti-slop go/analysis checker in a local Go repository.
+description: Install and configure the Go anti-slop go/analysis multichecker.
 ---
 
 # Install anti-slop for Go
 
-1. Inspect repository instructions, `git status`, `go.mod`, workspace files, and existing lint tooling.
-2. Copy the bundled `assets/anti-slop/` directory to `tools/anti-slop/`. Review an existing destination before replacing it.
-3. Inside `tools/anti-slop`, initialize a local module named `anti-slop-local` when `go.mod` is absent, then resolve the current maintained `golang.org/x/tools` dependency and run `go mod tidy`.
-4. Build the checker with `go build -o anti-slop ./cmd/anti-slop` from `tools/anti-slop`.
-5. Run the resulting binary from the repository root against owned packages: `./tools/anti-slop/anti-slop ./...`.
-6. Preserve existing golangci-lint, go vet, staticcheck, and formatter configuration; anti-slop adds project-specific restrictions rather than replacing them.
-7. Report remaining findings without suppressing them unless the user explicitly changes the policy.
+1. Inspect repository instructions, `git status`, `go.mod`, workspaces, and lint tooling.
+2. Copy bundled production files from `assets/anti-slop/` to `tools/anti-slop/`. Review existing destinations before replacement.
+3. Initialize a module named `anti-slop-local` if missing, resolve a maintained compatible `golang.org/x/tools` release, and run `go mod tidy`.
+4. Build with `go build -o anti-slop ./cmd/anti-slop` from `tools/anti-slop`.
+5. Run `./tools/anti-slop/anti-slop ./...` against repository-owned Go packages.
+6. Preserve existing golangci-lint, go vet, Staticcheck, and formatter configuration. Keep `containedctx` as a separate maintained linter where applicable.
+7. Do not suppress findings or apply semantic autofixes unless the user authorizes a policy change.
 
-The initial analyzer rejects `any` / `interface{}` parameters and returns, `map[string]any` / `map[string]interface{}` contracts, and direct `reflect.*` calls.
+The analyzers detect broad `any` contracts, `map[string]any`, pointer-to-interface types, dynamic reflection invocation and named access, and direct known-value widening followed by an assertion back. Inspection-only `reflect.TypeOf` and `reflect.ValueOf` remain allowed.

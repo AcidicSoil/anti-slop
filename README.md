@@ -14,7 +14,7 @@ Anti-slop is first and foremost the ruleset I use with my work, projects, and te
 | --- | --- | --- |
 | TypeScript / JavaScript | Oxlint plugin | `install-anti-slop` |
 | Python | Pylint / Astroid checker | `install-anti-slop-python` |
-| Rust | Clippy restriction profile | `install-anti-slop-rust` |
+| Rust | Clippy and rustc lint profiles | `install-anti-slop-rust` |
 | Go | `go/analysis` multichecker | `install-anti-slop-go` |
 
 Install the language you want:
@@ -52,7 +52,7 @@ stackforge setup sync anti-slop
 stackforge setup list
 ```
 
-The fork currently publishes `anti-slop/typescript`, `anti-slop/python`, `anti-slop/rust`, and `anti-slop/go`. TypeScript is a complete Stackforge-managed install. Python stages the canonical checker. Rust and Go stage their canonical policy/tool sources for repository-specific Cargo or Go integration because Stackforge does not yet merge those manifest formats.
+The fork currently publishes `anti-slop/typescript`, `anti-slop/python`, `anti-slop/rust`, and `anti-slop/go`. TypeScript is a complete Stackforge-managed install. Python stages the canonical checker. Rust stages both the Clippy and rustc profiles, while Go stages the canonical analyzer source and module for repository-specific integration because Stackforge does not yet merge those manifest formats.
 
 To inspect available skills first:
 
@@ -480,31 +480,33 @@ const userId = value as UserId;
 
 ## Python
 
-`languages/python/anti_slop.py` is a Pylint plugin with five initial rules:
+`languages/python/anti_slop.py` supplies seven Pylint/Astroid rules:
 
-- `no-any-parameter`
-- `no-any-return`
-- `no-unsafe-dictionary-type`
-- `no-chained-cast`
-- `require-safety-comment-for-cast`
+- `no-any-parameter` and `no-any-return` (legacy; Ruff ANN401 is the preferred future owner for ordinary signatures);
+- `no-unsafe-dictionary-type` (now aware of same-module type aliases);
+- `no-chained-cast` and `require-safety-comment-for-cast`;
+- `no-any-type-alias` (including PEP 695 `type` statements);
+- `no-widen-then-cast` (conservative local evidence-flow check).
 
-The Python installer keeps Ruff and existing type checking in place and adds Pylint only for custom rules Ruff cannot load as third-party plugins.
+The installer preserves Ruff and other type-checking tools. See [the Python guide](languages/python/README.md) for the flow limitations and regression command.
 
 ## Rust
 
-`languages/rust/anti-slop-clippy.toml` is the canonical restriction profile. It rejects unchecked unwrap/expect paths, panic placeholders, undocumented unsafe blocks, unsafe transmute patterns, and broad `as` conversions.
+`languages/rust/anti-slop-clippy.toml` contains Clippy restrictions, including `allow_attributes_without_reason`. `languages/rust/anti-slop-rust.toml` contains the rustc lint `unsafe_op_in_unsafe_fn`. Install them in their corresponding Cargo `lints.clippy` and `lints.rust` tables. See [the Rust guide](languages/rust/README.md) for workspace inheritance, examples, and profile tests.
 
-Rust starts with maintained Clippy rules. Dylint should be introduced only for a policy Clippy cannot express.
+The restriction profile rejects undocumented unsafe code, unchecked unwrap/expect paths, panic placeholders, transmute patterns, and broad numeric conversions. Dylint is not required for the current policy.
 
 ## Go
 
-`languages/go/` contains a `golang.org/x/tools/go/analysis` multichecker. The initial analyzer rejects:
+`languages/go/` implements five `go/analysis` analyzers:
 
-- `any` / `interface{}` parameters and returns;
-- `map[string]any` / `map[string]interface{}` contracts;
-- direct `reflect.*` calls.
+- broad `any` parameters, returns, and `map[string]any`;
+- pointer-to-interface types;
+- dynamic `reflect.Value.Call` and `CallSlice`;
+- reflection named field/method access;
+- direct local widening to `any` followed by an assertion to the original concrete type.
 
-The installer resolves the current `golang.org/x/tools` release in the target repository instead of pinning a stale toolchain dependency here.
+The reflection rules rely on `go/types` identity. Ordinary `reflect.TypeOf` and `reflect.ValueOf` introspection remain allowed. Go analyzer tests use the official `analysistest` framework. The installer resolves a compatible `golang.org/x/tools` release in the target repository; [the Go guide](languages/go/README.md) documents build and run steps.
 
 ## Development
 

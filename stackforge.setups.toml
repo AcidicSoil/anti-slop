@@ -22,10 +22,11 @@ description = "Stage the Python anti-slop Pylint checker and preserve existing P
 "tools/pylint/anti_slop.py" = "languages/python/anti_slop.py"
 
 [setups.rust]
-description = "Stage the Rust anti-slop Clippy policy for review and Cargo lint integration."
+description = "Stage Rust anti-slop Clippy and rustc policies for Cargo lint integration."
 
 [setups.rust.files]
 "tools/anti-slop/rust/anti-slop-clippy.toml" = "languages/rust/anti-slop-clippy.toml"
+"tools/anti-slop/rust/anti-slop-rust.toml" = "languages/rust/anti-slop-rust.toml"
 
 [setups.go]
 description = "Stage the Go anti-slop analyzer source for repository-local integration."

@@ -1,14 +1,14 @@
 ---
 name: install-anti-slop-rust
-description: Install and configure the Rust anti-slop Clippy restriction profile in a local Rust repository.
+description: Install and configure the Rust anti-slop Clippy and rustc restriction profiles in a local Rust repository.
 ---
 
 # Install anti-slop for Rust
 
 1. Inspect repository instructions, `git status`, `Cargo.toml`, workspace structure, `clippy.toml`, and existing lint tables.
-2. Use the repository's existing Rust toolchain and Clippy. Do not add a second parser or duplicate maintained Clippy rules.
-3. Read `assets/anti-slop-clippy.toml` and merge each entry into `[workspace.lints.clippy]` for a workspace or `[lints.clippy]` for a single package. Preserve unrelated lint settings and stronger existing levels.
-4. For workspace lint inheritance, ensure member packages opt into workspace lints only where the repository's current Cargo layout requires it.
-5. Run `cargo clippy --all-targets --all-features -- -D warnings` plus the repository's existing Rust test/check commands.
-6. Fix findings only when requested. Prefer explicit error propagation, checked conversions, documented unsafe invariants, and named domain types.
-7. Add Dylint only for a future rule that Clippy cannot express; do not introduce Dylint merely to mirror existing Clippy lints.
+2. Keep the repository's existing Rust toolchain and Clippy; do not add another parser.
+3. Merge `assets/anti-slop-clippy.toml` into `[workspace.lints.clippy]` or `[lints.clippy]`. Merge `assets/anti-slop-rust.toml` into `[workspace.lints.rust]` or `[lints.rust]`. Preserve stronger existing lint levels.
+4. Where workspace lint inheritance is used, ensure relevant member packages explicitly opt in with `[lints] workspace = true`.
+5. Run `cargo clippy --all-targets --all-features -- -D warnings` and the repository's existing Rust tests/checks.
+6. Fix findings only on request; prefer explicit error propagation, checked conversions, documented unsafe blocks, and reasoned lint suppressions.
+7. Only add Dylint for policies that maintained rustc and Clippy tooling cannot express.

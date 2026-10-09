@@ -61,11 +61,16 @@ syncFile(
 syncDirectory(
   join(root, "languages/go"),
   join(root, "skills/install-anti-slop-go/assets/anti-slop"),
-  (path) => extname(path) === ".go",
+  (path) => extname(path) === ".go" && !path.endsWith("_test.go") && !path.split(/[\\/]/).includes("testdata"),
 );
 syncFile(
   join(root, "languages/rust/anti-slop-clippy.toml"),
   join(root, "skills/install-anti-slop-rust/assets/anti-slop-clippy.toml"),
+);
+
+syncFile(
+  join(root, "languages/rust/anti-slop-rust.toml"),
+  join(root, "skills/install-anti-slop-rust/assets/anti-slop-rust.toml"),
 );
 
 console.log(check ? "Skill assets match canonical sources." : "Synced skill assets.");

@@ -1,5 +1,4 @@
-# Merge these entries under [workspace.lints.clippy] for a workspace or
-# [lints.clippy] for a single package.
+# Merge under [workspace.lints.clippy] or [lints.clippy].
 unwrap_used = "deny"
 expect_used = "deny"
 panic = "deny"
@@ -13,3 +12,4 @@ as_conversions = "deny"
 cast_possible_truncation = "deny"
 cast_possible_wrap = "deny"
 cast_sign_loss = "deny"
+allow_attributes_without_reason = "deny"

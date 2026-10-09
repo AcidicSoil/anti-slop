@@ -9,7 +9,7 @@ import (
 
 var Analyzer = &analysis.Analyzer{
 	Name: "antislopcontracts",
-	Doc:  "reject low-evidence Go contracts such as any parameters, any returns, map[string]any, and reflection calls",
+	Doc:  "reject low-evidence Go contracts such as any parameters, any returns, and map[string]any",
 	Run:  run,
 }
 
@@ -23,10 +23,6 @@ func run(pass *analysis.Pass) (any, error) {
 			case *ast.MapType:
 				if isStringType(pass, current.Key) && isAnyType(pass, current.Value) {
 					pass.Reportf(current.Pos(), "map[string]any discards domain evidence; use a named struct or interface contract")
-				}
-			case *ast.CallExpr:
-				if selector, ok := current.Fun.(*ast.SelectorExpr); ok && isReflectPackage(pass, selector.X) {
-					pass.Reportf(current.Pos(), "reflect.%s bypasses static evidence; prefer a typed operation or explicit boundary adapter", selector.Sel.Name)
 				}
 			}
 			return true
@@ -62,14 +58,4 @@ func isStringType(pass *analysis.Pass, expr ast.Expr) bool {
 	}
 	basic, ok := typeInfo.Underlying().(*types.Basic)
 	return ok && basic.Kind() == types.String
-}
-
-func isReflectPackage(pass *analysis.Pass, expr ast.Expr) bool {
-	ident, ok := expr.(*ast.Ident)
-	if !ok {
-		return false
-	}
-	object := pass.TypesInfo.Uses[ident]
-	pkgName, ok := object.(*types.PkgName)
-	return ok && pkgName.Imported().Path() == "reflect"
 }
