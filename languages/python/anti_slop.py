@@ -111,16 +111,17 @@ def _known_expression_for_widening(
     module = scope.root()
     if isinstance(value, nodes.Call) and isinstance(value.func, nodes.Name):
         name = value.func.name
-        return name not in scope.locals and any(
-            isinstance(statement, nodes.ClassDef) and statement.name == name
-            for statement in module.body
+        definitions = module.locals.get(name, [])
+        return (
+            name not in scope.locals and len(definitions) == 1
+            and isinstance(definitions[0], nodes.ClassDef)
         )
     if not isinstance(value, nodes.Name):
         return False
-    if value.name not in scope.locals and any(
-        isinstance(statement, (nodes.ClassDef, nodes.FunctionDef, nodes.AsyncFunctionDef))
-        and statement.name == value.name
-        for statement in module.body
+    definitions = module.locals.get(value.name, [])
+    if (
+        value.name not in scope.locals and len(definitions) == 1
+        and isinstance(definitions[0], (nodes.ClassDef, nodes.FunctionDef, nodes.AsyncFunctionDef))
     ):
         return True
     known = _known_local_type(value, preceding)
@@ -131,10 +132,8 @@ def _known_expression_for_widening(
         return False
     if known in {"str", "int", "float", "bool", "bytes", "list", "tuple", "dict", "set"}:
         return True
-    return any(
-        isinstance(statement, nodes.ClassDef) and statement.name == known
-        for statement in module.body
-    )
+    definitions = module.locals.get(known, [])
+    return len(definitions) == 1 and isinstance(definitions[0], nodes.ClassDef)
 
 
 class AntiSlopChecker(BaseChecker):

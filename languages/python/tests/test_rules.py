@@ -181,7 +181,9 @@ class AntiSlopRuleTests(unittest.TestCase):
             ExternalAlias = External
             class User: pass
             global_value: Any = User()
+            User = Unknown
             def make(source: Any):
+                shadowed: Any = User()
                 safe: object = User()
                 unknown: Any = Unknown()
                 imported: Any = External
