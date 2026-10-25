@@ -58,5 +58,66 @@ pub unsafe fn read(pointer: *const i32) -> i32 {
         self.assertEqual(result.returncode, 0, result.stderr)
 
 
+    def test_wildcard_enum_match_arm_rejected(self):
+        result = check("""
+pub enum Mode { On(i32), Off(i32), Wait, Done }
+pub fn value(mode: Mode) -> i32 {
+    match mode {
+        Mode::On(value) => value + 1,
+        Mode::Off(value) => value,
+        _ => 0,
+    }
+}
+""")
+        self.assertNotEqual(result.returncode, 0, result.stderr)
+        self.assertIn("wildcard_enum_match_arm", result.stderr)
+
+    def test_explicit_enum_match_accepted(self):
+        result = check("""
+pub enum Mode { On(i32), Off(i32), Wait, Done }
+pub fn value(mode: Mode) -> i32 {
+    match mode {
+        Mode::On(value) => value + 1,
+        Mode::Off(value) => value,
+        Mode::Wait => 0,
+        Mode::Done => 0,
+    }
+}
+""")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_assertion_in_result_function_rejected(self):
+        result = check("""
+pub fn parse(value: i32) -> Result<i32, ()> {
+    assert!(value > 0);
+    Ok(value)
+}
+""")
+        self.assertNotEqual(result.returncode, 0, result.stderr)
+        self.assertIn("panic_in_result_fn", result.stderr)
+
+    def test_result_validation_without_panic_accepted(self):
+        result = check("""
+pub fn parse(value: i32) -> Result<i32, ()> {
+    if value <= 0 { return Err(()); }
+    Ok(value)
+}
+""")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_unreachable_macro_rejected(self):
+        result = check('pub fn failed() -> i32 { unreachable!() }')
+        self.assertNotEqual(result.returncode, 0, result.stderr)
+        self.assertIn("clippy::unreachable", result.stderr)
+
+    def test_checked_control_flow_accepted(self):
+        result = check('pub fn maybe() -> Option<i32> { None }')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_indexing_slicing_remains_deferred(self):
+        clippy = tomllib.loads((ROOT / 'anti-slop-clippy.toml').read_text())
+        self.assertNotIn('indexing_slicing', clippy)
+
+
 if __name__ == '__main__':
     unittest.main()
