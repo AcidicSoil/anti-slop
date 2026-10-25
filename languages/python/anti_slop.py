@@ -102,6 +102,41 @@ def _known_local_type(
     return None
 
 
+def _known_expression_for_widening(
+    value: nodes.NodeNG, scope: nodes.FunctionDef | nodes.AsyncFunctionDef,
+    preceding: list[nodes.NodeNG], aliases: dict[str, nodes.NodeNG | None],
+) -> bool:
+    if isinstance(value, (nodes.Const, nodes.List, nodes.Tuple, nodes.Set, nodes.Dict, nodes.Lambda)):
+        return True
+    module = scope.root()
+    if isinstance(value, nodes.Call) and isinstance(value.func, nodes.Name):
+        name = value.func.name
+        return name not in scope.locals and any(
+            isinstance(statement, nodes.ClassDef) and statement.name == name
+            for statement in module.body
+        )
+    if not isinstance(value, nodes.Name):
+        return False
+    if value.name not in scope.locals and any(
+        isinstance(statement, (nodes.ClassDef, nodes.FunctionDef, nodes.AsyncFunctionDef))
+        and statement.name == value.name
+        for statement in module.body
+    ):
+        return True
+    known = _known_local_type(value, preceding)
+    if known is None or known in {"Any", "object"}:
+        return False
+    if known in aliases:
+        # An alias can resolve to an imported or cyclic target; neither proves a type.
+        return False
+    if known in {"str", "int", "float", "bool", "bytes", "list", "tuple", "dict", "set"}:
+        return True
+    return any(
+        isinstance(statement, nodes.ClassDef) and statement.name == known
+        for statement in module.body
+    )
+
+
 class AntiSlopChecker(BaseChecker):
     """Reject broad type contracts and unjustified assertions."""
 
@@ -141,6 +176,16 @@ class AntiSlopChecker(BaseChecker):
             "Known type is widened to Any and cast back; preserve the original type",
             "no-widen-then-cast",
             "Reject direct local known-to-Any-to-known type evidence loss.",
+        ),
+        "E9708": (
+            "Conditional dictionary unpack uses an empty branch; add the key explicitly",
+            "no-conditional-empty-dict-unpack",
+            "Reject dictionary unpack of a conditional expression with an empty dict branch.",
+        ),
+        "E9709": (
+            "Known local value widened to Any; preserve its type evidence",
+            "no-known-value-widening",
+            "Reject unambiguous, concrete values stored in locally annotated Any variables.",
         ),
     }
 
@@ -221,6 +266,40 @@ class AntiSlopChecker(BaseChecker):
             and _contains_any(node.value, self._aliases)
         ):
             self.add_message("no-any-type-alias", node=node)
+
+        scope = node.parent
+        if not isinstance(scope, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
+            return
+        if node.value is None or not isinstance(node.target, nodes.AssignName):
+            return
+        if not _contains_any(node.annotation, self._aliases):
+            return
+        if isinstance(node.annotation, (nodes.Subscript, nodes.BinOp)):
+            return
+        if node not in scope.body:
+            return
+        index = scope.body.index(node)
+        if not _known_expression_for_widening(
+            node.value, scope, scope.body[:index], self._aliases,
+        ):
+            return
+        if any(
+            isinstance(target, nodes.AssignName) and target.name == node.target.name
+            for statement in scope.body[index + 1:]
+            for target in statement.nodes_of_class(nodes.AssignName)
+        ):
+            return
+        self.add_message("no-known-value-widening", node=node.annotation)
+
+    def visit_dict(self, node: nodes.Dict) -> None:
+        for key, value in node.items:
+            if not isinstance(key, nodes.DictUnpack) or not isinstance(value, nodes.IfExp):
+                continue
+            if any(
+                isinstance(branch, nodes.Dict) and not branch.items
+                for branch in (value.body, value.orelse)
+            ):
+                self.add_message("no-conditional-empty-dict-unpack", node=value)
 
     def visit_call(self, node: nodes.Call) -> None:
         if not _is_cast_call(node):
