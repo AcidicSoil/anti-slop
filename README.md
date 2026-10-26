@@ -13,6 +13,7 @@ Anti-slop is first and foremost the ruleset I use with my work, projects, and te
 | Language | Implementation | Skill |
 | --- | --- | --- |
 | TypeScript / JavaScript | Oxlint plugin | `install-anti-slop` |
+| CSS | Stylelint plugin | `install-anti-slop-css` |
 | Python | Pylint / Astroid checker | `install-anti-slop-python` |
 | Rust | Clippy and rustc lint profiles | `install-anti-slop-rust` |
 | Go | `go/analysis` multichecker | `install-anti-slop-go` |
@@ -21,12 +22,15 @@ Install the language you want:
 
 ```bash
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop
+npx skills add AcidicSoil/anti-slop --skill install-anti-slop-css
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop-python
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop-rust
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop-go
 ```
 
 The additional language implementations are downstream extensions maintained in this fork.
+
+CSS uses [three Stylelint architecture rules](languages/css/README.md): stylesheet size, scoped ownership, and cross-feature dependencies. The CSS install skill also prescribes a verified migration of existing oversized or global stylesheets; it does not blindly auto-split CSS.
 
 ## Install with an agent skill
 
@@ -52,7 +56,7 @@ stackforge setup sync anti-slop
 stackforge setup list
 ```
 
-The fork currently publishes `anti-slop/typescript`, `anti-slop/python`, `anti-slop/rust`, and `anti-slop/go`. TypeScript is a complete Stackforge-managed install. Python stages the canonical checker. Rust stages both the Clippy and rustc profiles, while Go stages the canonical analyzer source and module for repository-specific integration because Stackforge does not yet merge those manifest formats.
+The fork currently publishes `anti-slop/typescript`, `anti-slop/css`, `anti-slop/python`, `anti-slop/rust`, and `anti-slop/go`. TypeScript is a complete Stackforge-managed install. Python stages the canonical checker. Rust stages both the Clippy and rustc profiles, while Go stages the canonical analyzer source and module for repository-specific integration because Stackforge does not yet merge those manifest formats.
 
 To inspect available skills first:
 

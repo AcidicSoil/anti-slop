@@ -10,14 +10,24 @@
         "typescript"
       ],
       "evidence": [
+        "languages/css/index.mjs",
+        "languages/css/rules/max-stylesheet-size.mjs",
+        "languages/css/rules/no-cross-feature-styling.mjs",
+        "languages/css/rules/paths.mjs",
+        "languages/css/rules/require-style-ownership.mjs",
+        "languages/css/stylelint.config.mjs",
+        "languages/css/tests/install.test.mjs",
+        "languages/css/tests/rules.test.mjs",
         "languages/go/go.mod",
         "package.json",
         "pnpm-lock.yaml",
         "scripts/sync-skill-assets.mjs",
+        "skills/install-anti-slop-css/references/stylelint.config.mjs",
+        "skills/install-anti-slop-css/scripts/install.mjs",
         "skills/install-anti-slop/scripts/install.mjs",
         "tsconfig.json"
       ],
-      "fingerprint": "003cebbec963cf77f03df2a6d1173cc70901fcb3375a828b09090486588517e1"
+      "fingerprint": "7a9c0982b88fc33f193fcc9fc1f9c08a3108805b3b9e970654b2e7dcb3e70820"
     }
   },
   "catalog": {
@@ -583,6 +593,123 @@
     "digest": ""
   },
   "assessments": {
+    "orchestkit:src/skills/dev/SKILL.md": {
+      "domain": "platform",
+      "kind": "skill",
+      "sourceDigest": "bdf3495b8857e4efa549af7d6be01881a7a2f623ba63fc47adb261c06f7f391e",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "likely-relevant"
+    },
+    "orchestkit:src/skills/dev/rules/branch-named-subdomain.md": {
+      "domain": "platform",
+      "kind": "rule",
+      "sourceDigest": "fd283346122f311b7d0f3868cc173ddf170c521bdbf29165169204d47122d363",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "likely-relevant"
+    },
+    "orchestkit:src/skills/dev/rules/idempotent-boot.md": {
+      "domain": "platform",
+      "kind": "rule",
+      "sourceDigest": "c5e735ba406874a0e0e0e8619fbe1af4e9d3cc8cc48d93d6c2972f224de0d06f",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "likely-relevant"
+    },
+    "orchestkit:src/skills/dev/rules/lab-stack-prerequisites.md": {
+      "domain": "platform",
+      "kind": "rule",
+      "sourceDigest": "3523f7541880cbedd67742482386da47a00ffde794eb446a2602a9f7c019b58b",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "likely-relevant"
+    },
+    "orchestkit:src/skills/dev/rules/teardown-order.md": {
+      "domain": "platform",
+      "kind": "rule",
+      "sourceDigest": "b90f754a2a57bfd76b840462252ce3bbcb52b79ac7fe3ef483251b2d251cc2f3",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "likely-relevant"
+    },
+    "orchestkit:src/skills/quality-gates/SKILL.md": {
+      "domain": "testing",
+      "kind": "skill",
+      "sourceDigest": "dc3d2304fea4e3135940ed00e5683f3a63a536a224bbb3c06f1c0646504599a4",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "likely-relevant"
+    },
+    "orchestkit:src/skills/quality-gates/rules/practices-code-standards.md": {
+      "domain": "testing",
+      "kind": "rule",
+      "sourceDigest": "13cc29fa648e1f0c2c33cc47a5a55f29b4734ff14303b49dc2e85cc84717e512",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "likely-relevant"
+    },
+    "orchestkit:src/skills/quality-gates/rules/practices-review-checklist.md": {
+      "domain": "testing",
+      "kind": "rule",
+      "sourceDigest": "f05ed1eff2685c4bdb476c351b41b7bfbda07389c282eacdd63ddd1fe4576c29",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "likely-relevant"
+    },
+    "orchestkit:src/skills/quality-gates/rules/yagni-gate.md": {
+      "domain": "testing",
+      "kind": "rule",
+      "sourceDigest": "500c9dce529705e6073c8f08a1dfb1245daafd12d90248b78e1daa24b57ff88e",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "likely-relevant"
+    },
     "orchestkit:src/skills/testing-unit/SKILL.md": {
       "domain": "testing",
       "kind": "skill",
@@ -699,22 +826,75 @@
       "stackFingerprint": "",
       "reviewedSourceDigest": "",
       "candidate": "likely-relevant"
+    },
+    "policy:cccc-complexity": {
+      "domain": "tooling",
+      "kind": "policy",
+      "sourceDigest": "b4499dac6e4c6878846d4bc3ee98aef8f39a12ad9710a04684a1888f5ce977a7",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "candidate"
+    },
+    "policy:dependency-cruiser": {
+      "domain": "tooling",
+      "kind": "policy",
+      "sourceDigest": "ae876e535a88d93abab51c52ab1cad4677b45c83f6aac169ac70d8333be2ef30",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "candidate"
+    },
+    "policy:import-paths": {
+      "domain": "tooling",
+      "kind": "policy",
+      "sourceDigest": "9204bc7b53fed2f1a353197ccc9a08d18707049ac4e295a57c44db251c09dca7",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "candidate"
+    },
+    "policy:voidzero-toolchain": {
+      "domain": "tooling",
+      "kind": "policy",
+      "sourceDigest": "18b468e26a5da5411aafe7d327cded17324dbe91c56f2dbd3f4b2485c5e8b575",
+      "applicability": "review-required",
+      "compliance": "unevaluated",
+      "reason": "",
+      "evidence": [],
+      "evidenceDigests": {},
+      "stackFingerprint": "",
+      "reviewedSourceDigest": "",
+      "candidate": "candidate"
     }
   },
   "findings": [],
   "proposals": [],
-  "updatedAt": "2026-10-25T21:56:38+00:00",
+  "updatedAt": "2026-10-26T20:52:00+00:00",
   "featureMap": {
     "schemaVersion": "ppm-feature-work-map/v1",
-    "objective": "Python and Rust lint regression fixtures",
+    "objective": "Add reusable CSS Stylelint architecture rules",
     "mode": "targeted",
     "features": [
-      "testing-unit"
+      "testing-unit",
+      "tooling"
     ],
     "dependencies": [],
     "paths": [
-      "languages/python/tests/test_rules.py",
-      "languages/rust/tests/test_profile.py"
+      "languages/css/index.mjs",
+      "languages/css/tests/rules.test.mjs"
     ],
     "questions": [],
     "featureRules": {
@@ -728,9 +908,33 @@
         "orchestkit:src/skills/testing-unit/rules/unit-aaa-pattern.md",
         "orchestkit:src/skills/testing-unit/rules/unit-fixture-scoping.md",
         "orchestkit:src/skills/testing-unit/rules/unit-parametrized.md"
+      ],
+      "tooling": [
+        "orchestkit:src/skills/dev/SKILL.md",
+        "orchestkit:src/skills/dev/rules/branch-named-subdomain.md",
+        "orchestkit:src/skills/dev/rules/idempotent-boot.md",
+        "orchestkit:src/skills/dev/rules/lab-stack-prerequisites.md",
+        "orchestkit:src/skills/dev/rules/teardown-order.md",
+        "orchestkit:src/skills/quality-gates/SKILL.md",
+        "orchestkit:src/skills/quality-gates/rules/practices-code-standards.md",
+        "orchestkit:src/skills/quality-gates/rules/practices-review-checklist.md",
+        "orchestkit:src/skills/quality-gates/rules/yagni-gate.md",
+        "policy:cccc-complexity",
+        "policy:dependency-cruiser",
+        "policy:import-paths",
+        "policy:voidzero-toolchain"
       ]
     },
     "ruleIds": [
+      "orchestkit:src/skills/dev/SKILL.md",
+      "orchestkit:src/skills/dev/rules/branch-named-subdomain.md",
+      "orchestkit:src/skills/dev/rules/idempotent-boot.md",
+      "orchestkit:src/skills/dev/rules/lab-stack-prerequisites.md",
+      "orchestkit:src/skills/dev/rules/teardown-order.md",
+      "orchestkit:src/skills/quality-gates/SKILL.md",
+      "orchestkit:src/skills/quality-gates/rules/practices-code-standards.md",
+      "orchestkit:src/skills/quality-gates/rules/practices-review-checklist.md",
+      "orchestkit:src/skills/quality-gates/rules/yagni-gate.md",
       "orchestkit:src/skills/testing-unit/SKILL.md",
       "orchestkit:src/skills/testing-unit/rules/data-factories.md",
       "orchestkit:src/skills/testing-unit/rules/data-fixtures.md",
@@ -739,45 +943,101 @@
       "orchestkit:src/skills/testing-unit/rules/mocking-vcr.md",
       "orchestkit:src/skills/testing-unit/rules/unit-aaa-pattern.md",
       "orchestkit:src/skills/testing-unit/rules/unit-fixture-scoping.md",
-      "orchestkit:src/skills/testing-unit/rules/unit-parametrized.md"
+      "orchestkit:src/skills/testing-unit/rules/unit-parametrized.md",
+      "policy:cccc-complexity",
+      "policy:dependency-cruiser",
+      "policy:import-paths",
+      "policy:voidzero-toolchain"
     ],
-    "ruleDigest": "a20bbc614f27975dda14598e11cc6fff8927ea0babef0b9304020b8c49d1f4ff",
+    "ruleDigest": "ca6c93bd447ef1a0c71ccf997e4d284d3d60695e45736fd100214485fd4e8752",
     "taskEvidence": {
+      "orchestkit:src/skills/dev/SKILL.md": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
+      "orchestkit:src/skills/dev/rules/branch-named-subdomain.md": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
+      "orchestkit:src/skills/dev/rules/idempotent-boot.md": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
+      "orchestkit:src/skills/dev/rules/lab-stack-prerequisites.md": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
+      "orchestkit:src/skills/dev/rules/teardown-order.md": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
+      "orchestkit:src/skills/quality-gates/SKILL.md": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
+      "orchestkit:src/skills/quality-gates/rules/practices-code-standards.md": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
+      "orchestkit:src/skills/quality-gates/rules/practices-review-checklist.md": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
+      "orchestkit:src/skills/quality-gates/rules/yagni-gate.md": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
       "orchestkit:src/skills/testing-unit/SKILL.md": {
-        "path": "docs/verification/anti-slop-p1-standards-review.md",
-        "sha256": "a9c1109864ed8f5798b9680d1b814461e767434443855c0f9b04cf34e540a472"
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
       },
       "orchestkit:src/skills/testing-unit/rules/data-factories.md": {
-        "path": "docs/verification/anti-slop-p1-standards-review.md",
-        "sha256": "a9c1109864ed8f5798b9680d1b814461e767434443855c0f9b04cf34e540a472"
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
       },
       "orchestkit:src/skills/testing-unit/rules/data-fixtures.md": {
-        "path": "languages/python/tests/test_rules.py",
-        "sha256": "604b56b73239872050c88baaba8dd5b5cee68bf50197161d6ea914b8db47f566"
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
       },
       "orchestkit:src/skills/testing-unit/rules/data-seeding-cleanup.md": {
-        "path": "languages/rust/tests/test_profile.py",
-        "sha256": "10c0a93ad9b6d0b8cf198a3cbdf129eeebcb661d19e52e7159d7d7039eba7c40"
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
       },
       "orchestkit:src/skills/testing-unit/rules/mocking-msw.md": {
-        "path": "docs/verification/anti-slop-p1-standards-review.md",
-        "sha256": "a9c1109864ed8f5798b9680d1b814461e767434443855c0f9b04cf34e540a472"
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
       },
       "orchestkit:src/skills/testing-unit/rules/mocking-vcr.md": {
-        "path": "docs/verification/anti-slop-p1-standards-review.md",
-        "sha256": "a9c1109864ed8f5798b9680d1b814461e767434443855c0f9b04cf34e540a472"
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
       },
       "orchestkit:src/skills/testing-unit/rules/unit-aaa-pattern.md": {
-        "path": "languages/python/tests/test_rules.py",
-        "sha256": "604b56b73239872050c88baaba8dd5b5cee68bf50197161d6ea914b8db47f566"
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
       },
       "orchestkit:src/skills/testing-unit/rules/unit-fixture-scoping.md": {
-        "path": "languages/rust/tests/test_profile.py",
-        "sha256": "10c0a93ad9b6d0b8cf198a3cbdf129eeebcb661d19e52e7159d7d7039eba7c40"
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
       },
       "orchestkit:src/skills/testing-unit/rules/unit-parametrized.md": {
-        "path": "languages/go/cmd/anti-slop/main_test.go",
-        "sha256": "a0dbb1f1782f1a72041c957ab3455082f12634aa820a699425b22417c4d56a30"
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
+      "policy:cccc-complexity": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
+      "policy:dependency-cruiser": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
+      "policy:import-paths": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
+      },
+      "policy:voidzero-toolchain": {
+        "path": "docs/verification/anti-slop-css-standards-review.md",
+        "sha256": "31c2925f14db06fdb158b00dfd703d09c561d4a46e4d178956c5e6a27acb02bb"
       }
     }
   },

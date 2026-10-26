@@ -15,6 +15,12 @@ oxlint = "1.87.0"
 "tools/oxlint/anti-slop" = "src"
 "tools/oxlint/anti-slop/LICENSE" = "LICENSE"
 
+[setups.css]
+description = "Stage the anti-slop Stylelint plugin while preserving existing CSS tooling."
+
+[setups.css.files]
+"tools/stylelint/anti-slop-css" = "skills/install-anti-slop-css/assets/anti-slop-css"
+
 [setups.python]
 description = "Stage the Python anti-slop Pylint checker and preserve existing Python tooling."
 
