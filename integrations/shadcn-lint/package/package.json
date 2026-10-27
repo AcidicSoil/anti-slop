@@ -1,0 +1,40 @@
+{
+  "name": "@shadcn/lint",
+  "description": "A programmable agent-first linter for Tailwind design systems.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "./dist/tailwind-worker.js"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@eslint/core": "^0.17.0",
+    "cn": "0.4.0"
+  },
+  "peerDependencies": {
+    "@typescript-eslint/parser": ">=8.40.0",
+    "eslint": ">=9.30.0"
+  },
+  "peerDependenciesMeta": {
+    "@typescript-eslint/parser": {
+      "optional": true
+    },
+    "eslint": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "version": "0.2.3-anti-slop.1"
+}

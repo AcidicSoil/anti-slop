@@ -16,6 +16,15 @@ export default {
       featureRoot: "src/features",
       allowGlobalSelectors: false,
     },
+    // Good CSS: prefer logical inline-axis properties and explicit transitions.
+    "property-disallowed-list": [
+      "/^(margin|padding)-(left|right)$/",
+      "/^border-(left|right)(?:-(width|color|style))?$/",
+    ],
+    "declaration-property-value-disallowed-list": {
+      transition: ["/(^|,)\\s*all\\b/"],
+      "transition-property": ["all"],
+    },
     "max-nesting-depth": 2,
     "selector-max-specificity": "0,3,0",
     "selector-max-compound-selectors": 3,

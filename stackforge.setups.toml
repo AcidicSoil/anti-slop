@@ -15,6 +15,15 @@ oxlint = "1.87.0"
 "tools/oxlint/anti-slop" = "src"
 "tools/oxlint/anti-slop/LICENSE" = "LICENSE"
 
+[setups.shadcn]
+description = "Stage complete enhanced @shadcn/lint (six upstream and thirteen Good CSS rules); configure only reviewed rules."
+
+[setups.shadcn.package_json.devDependencies]
+"@shadcn/lint" = "file:tools/oxlint/shadcn-lint"
+
+[setups.shadcn.files]
+"tools/oxlint/shadcn-lint" = "integrations/shadcn-lint/package"
+
 [setups.css]
 description = "Stage the anti-slop Stylelint plugin while preserving existing CSS tooling."
 

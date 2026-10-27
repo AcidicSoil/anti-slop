@@ -92,3 +92,25 @@ test("cross-feature global escape rejected unless explicitly permitted", async (
 test("cross-feature rule ignores files outside feature root", async () => {
   assert.deepEqual(await warnings("no-cross-feature-styling", { featureRoot: "src/features" }, '@import "../features/chat/chat.css";', "src/styles/global.css"), []);
 });
+
+test('shared Stylelint preset rejects physical inline properties and transition-all', async () => {
+  const config = (await import('../stylelint.config.mjs')).default;
+  const { results } = await stylelint.lint({
+    code: '.example { margin-left: 1rem; transition: all 200ms; transition-property: all; }',
+    codeFilename: 'src/styles/example.css',
+    config: {
+      ...config,
+      extends: [],
+      plugins: [],
+      rules: {
+        'property-disallowed-list': config.rules['property-disallowed-list'],
+        'declaration-property-value-disallowed-list': config.rules['declaration-property-value-disallowed-list'],
+      },
+    },
+  });
+  assert.deepEqual(results[0].warnings.map((warning) => warning.rule).sort(), [
+    'property-disallowed-list',
+    'declaration-property-value-disallowed-list',
+    'declaration-property-value-disallowed-list',
+  ].sort());
+});

@@ -8,6 +8,8 @@ Install `stylelint` and `stylelint-config-standard` with the consuming project's
 
 Run `pnpm exec stylelint "src/**/*.css"` (adjust glob/package manager for the project). For SCSS, use the project's existing compatible SCSS syntax and config rather than replacing it.
 
+The shared [Stylelint configuration](stylelint.config.mjs) also proposes the native `property-disallowed-list` and `declaration-property-value-disallowed-list` policies for writing-direction-independent properties and avoiding `transition: all`. These checks must be reviewed for the target project's CSS patterns before merging, and never replace the three architecture rules below.
+
 ## Rules
 
 | Rule | Configuration | Diagnostic |

@@ -30,6 +30,8 @@ npx skills add AcidicSoil/anti-slop --skill install-anti-slop-go
 
 The additional language implementations are downstream extensions maintained in this fork.
 
+Tailwind v4 UI projects use the separate [enhanced shadcn/lint Stackforge setup](languages/shadcn/README.md): six upstream rules plus thirteen new Good CSS rules. The complete plugin is bundled as a versioned local package and rule activation remains subject to the project's reviewed design system.
+
 CSS uses [three Stylelint architecture rules](languages/css/README.md): stylesheet size, scoped ownership, and cross-feature dependencies. The CSS install skill also prescribes a verified migration of existing oversized or global stylesheets; it does not blindly auto-split CSS.
 
 ## Install with an agent skill
@@ -56,7 +58,7 @@ stackforge setup sync anti-slop
 stackforge setup list
 ```
 
-The fork currently publishes `anti-slop/typescript`, `anti-slop/css`, `anti-slop/python`, `anti-slop/rust`, and `anti-slop/go`. TypeScript is a complete Stackforge-managed install. Python stages the canonical checker. Rust stages both the Clippy and rustc profiles, while Go stages the canonical analyzer source and module for repository-specific integration because Stackforge does not yet merge those manifest formats.
+The fork currently publishes `anti-slop/typescript`, `anti-slop/css`, `anti-slop/shadcn`, `anti-slop/python`, `anti-slop/rust`, and `anti-slop/go`. `anti-slop/shadcn` stages the complete enhanced shadcn/lint package and a local dev dependency; project-aware registration and rule activation remain owned by PPM. TypeScript is a complete Stackforge-managed install. Python stages the canonical checker. Rust stages both the Clippy and rustc profiles, while Go stages the canonical analyzer source and module for repository-specific integration because Stackforge does not yet merge those manifest formats.
 
 To inspect available skills first:
 
