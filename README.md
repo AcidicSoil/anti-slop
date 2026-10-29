@@ -32,6 +32,8 @@ The additional language implementations are downstream extensions maintained in 
 
 Tailwind v4 UI projects use the separate [enhanced shadcn/lint Stackforge setup](languages/shadcn/README.md): six upstream rules plus thirteen new Good CSS rules. The complete plugin is bundled as a versioned local package and rule activation remains subject to the project's reviewed design system.
 
+The optional `good-css` and `better-typography` agent skills complement the CSS and shadcn lint checks where installed. `tailwind-to-stylex` is only for explicit, scoped styling migration; neither anti-slop nor Stackforge triggers framework conversion. See the [shadcn setup guide](languages/shadcn/README.md) for PPM integration.
+
 CSS uses [three Stylelint architecture rules](languages/css/README.md): stylesheet size, scoped ownership, and cross-feature dependencies. The CSS install skill also prescribes a verified migration of existing oversized or global stylesheets; it does not blindly auto-split CSS.
 
 ## Install with an agent skill

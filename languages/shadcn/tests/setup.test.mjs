@@ -30,3 +30,17 @@ test('the distributable preserves all six upstream and thirteen new rules', () =
   }
   assert.equal(new Set([...originals, ...additions]).size, 19);
 });
+
+test('agent skill guidance complements lint without automatic framework migration', () => {
+  const shadcnGuide = readFileSync(resolve(root, 'languages/shadcn/README.md'), 'utf8');
+  const cssGuide = readFileSync(resolve(root, 'languages/css/README.md'), 'utf8');
+  const cssInstall = readFileSync(resolve(root, 'skills/install-anti-slop-css/SKILL.md'), 'utf8');
+  for (const name of ['good-css', 'better-typography']) {
+    assert.ok(shadcnGuide.includes(name), name);
+    assert.ok(cssGuide.includes(name), name);
+  }
+  assert.ok(shadcnGuide.includes('tailwind-to-stylex'));
+  assert.match(shadcnGuide, /only.*(?:explicit|approved).*migration/i);
+  assert.ok(cssInstall.includes('good-css'));
+  assert.ok(cssInstall.includes('better-typography'));
+});

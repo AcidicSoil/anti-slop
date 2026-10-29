@@ -10,6 +10,10 @@ Run `pnpm exec stylelint "src/**/*.css"` (adjust glob/package manager for the pr
 
 The shared [Stylelint configuration](stylelint.config.mjs) also proposes the native `property-disallowed-list` and `declaration-property-value-disallowed-list` policies for writing-direction-independent properties and avoiding `transition: all`. These checks must be reviewed for the target project's CSS patterns before merging, and never replace the three architecture rules below.
 
+## Complementary agent guidance
+
+Use installed `~/.agents/skills/good-css/SKILL.md` when authoring or reviewing CSS (or Tailwind/StyleX styles). Use `~/.agents/skills/better-typography/SKILL.md` when modifying typography, forms or reading content. Read only task-applicable references and keep the existing styling system, reviewed tokens and browser support intact. These are optional authoring/review skills, not Stylelint plugins and not substitutes for the CSS architecture rules below. `tailwind-to-stylex` is a separate explicitly approved migration workflow, not a prerequisite of anti-slop CSS installation.
+
 ## Rules
 
 | Rule | Configuration | Diagnostic |

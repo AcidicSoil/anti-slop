@@ -13,6 +13,14 @@ stackforge setup apply anti-slop/shadcn
 
 The setup stages the local package at `tools/oxlint/shadcn-lint/` and adds the package-manager-owned dev dependency `@shadcn/lint: file:tools/oxlint/shadcn-lint`. Its package is self-contained for distribution, with pinned source provenance in `integrations/shadcn-lint/UPSTREAM.md`. Stackforge detects conflicts with existing unmanaged public package versions or modified files instead of overwriting them.
 
+## Companion styling skills (PPM-owned)
+
+In frontend projects where these agent skills are installed, PPM routes style tasks to `~/.agents/skills/good-css/SKILL.md` and text/typography tasks to `~/.agents/skills/better-typography/SKILL.md` in the project's **current** styling system. They provide review and implementation guidance beyond the statically enforceable Good CSS checks. Agent instructions do not make additional CSS lint rules automatically enforceable. Review the specific skill's references and browser/version constraints before applying its recommendations.
+
+`~/.agents/skills/tailwind-to-stylex/SKILL.md` is for **only an explicit, approved migration** from Tailwind to StyleX, not a dependency or automatic step of installing enhanced shadcn/lint. Preserve the original component's layout, states and themes, verify the StyleX compiler integration and compare rendered output. Do not remove Tailwind while other components still require it. For StyleX-only projects, `@shadcn/lint` may be inapplicable; retain the applicable CSS/design guidance and checks instead.
+
+Skills are *not* included in the `anti-slop/shadcn` Stackforge package. Stackforge owns repeatable lint package distribution and does not install user-level agent skills or change their runtime discovery paths. PPM's [styling specialist routing](https://github.com/AcidicSoil/pinchtab-profile-manager/blob/main/.agents/skills/pinchtab-profile-manager-frontend/references/styling-skills.md) owns their selection and missing-skill behavior. Do not silently copy or overwrite third-party skills.
+
 ## Linter registration (PPM-owned)
 
 Keep existing plugins, configuration, project aliases, parsers, design-system contracts and CI commands. **Stackforge does not rewrite Oxlint/ESLint config.** PPM integrates it into the existing UI linter after checking the project:
