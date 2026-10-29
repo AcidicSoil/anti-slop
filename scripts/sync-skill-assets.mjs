@@ -65,6 +65,16 @@ syncFile(
   join(root, "skills/install-anti-slop-css/references/stylelint.config.mjs"),
 );
 
+syncDirectory(
+  join(root, "languages/stylex"),
+  join(root, "skills/install-anti-slop-stylex/assets/anti-slop-stylex"),
+  (path) => extname(path) === ".mjs" && !path.split(/[\\/]/).includes("tests") && !path.endsWith("/eslint.config.example.mjs"),
+);
+syncFile(
+  join(root, "languages/stylex/eslint.config.example.mjs"),
+  join(root, "skills/install-anti-slop-stylex/references/eslint.config.example.mjs"),
+);
+
 syncFile(
   join(root, "languages/python/anti_slop.py"),
   join(root, "skills/install-anti-slop-python/assets/anti_slop.py"),

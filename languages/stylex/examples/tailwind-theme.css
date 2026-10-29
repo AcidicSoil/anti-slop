@@ -1,0 +1,7 @@
+/* Tailwind v4 aliases reference the canonical CSS variables. */
+@import "tailwindcss";
+@theme inline {
+  --color-primary: var(--app-primary);
+  --color-surface: var(--app-surface);
+  --color-text: var(--app-text);
+}

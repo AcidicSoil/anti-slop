@@ -1,0 +1,6 @@
+/* Canonical color values. Do not copy these literals into other systems. */
+:root {
+  --app-primary: oklch(0.52 0.17 256);
+  --app-surface: oklch(0.98 0.01 256);
+  --app-text: oklch(0.23 0.02 256);
+}
