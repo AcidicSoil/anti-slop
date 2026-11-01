@@ -1,5 +1,7 @@
 node_modules/
 dist/
+!integrations/shadcn-lint/package/dist/
+!integrations/shadcn-lint/package/dist/**
 .DS_Store
 *.log
 __pycache__/

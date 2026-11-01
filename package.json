@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit",
     "sync:skill-assets": "node scripts/sync-skill-assets.mjs",
     "check:skill-assets": "node scripts/sync-skill-assets.mjs --check",
-    "test:shadcn": "node --test languages/shadcn/tests/*.test.mjs",
+    "test:shadcn": "node --test languages/shadcn/tests/*.test.mjs && python3 scripts/test_shadcn_setup.py",
     "test:stylex": "node --test languages/stylex/tests/*.test.mjs"
   },
   "dependencies": {
