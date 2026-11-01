@@ -60,7 +60,7 @@ stackforge setup sync anti-slop
 stackforge setup list
 ```
 
-The fork currently publishes `anti-slop/typescript`, `anti-slop/css`, `anti-slop/shadcn`, `anti-slop/python`, `anti-slop/rust`, and `anti-slop/go`. `anti-slop/shadcn` stages the complete enhanced shadcn/lint package and a local dev dependency; project-aware registration and rule activation remain owned by PPM. TypeScript is a complete Stackforge-managed install. Python stages the canonical checker. Rust stages both the Clippy and rustc profiles, while Go stages the canonical analyzer source and module for repository-specific integration because Stackforge does not yet merge those manifest formats.
+The fork currently publishes `anti-slop/typescript`, `anti-slop/css`, `anti-slop/shadcn`, `anti-slop/python`, `anti-slop/rust`, and `anti-slop/go`. `anti-slop/shadcn` stages the complete enhanced shadcn/lint package and a local dev dependency; project-aware registration and rule activation remain owned by PPM. TypeScript stages the plugin and lint command without changing the consumer's Oxlint dependencies. Install `oxlint` and a matching `@oxlint/plugins` through the target project's package manager if missing; existing versions remain untouched. Python stages the canonical checker. Rust stages both the Clippy and rustc profiles, while Go stages the canonical analyzer source and module for repository-specific integration because Stackforge does not yet merge those manifest formats.
 
 To inspect available skills first:
 
