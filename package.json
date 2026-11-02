@@ -20,20 +20,20 @@
     "test:stylex": "node --test languages/stylex/tests/*.test.mjs"
   },
   "dependencies": {
-    "@oxlint/plugins": "1.87.0"
+    "@oxlint/plugins": "1.90.0"
   },
   "devDependencies": {
     "@shadcn/lint": "file:integrations/shadcn-lint/package",
     "@stylexjs/eslint-plugin": "0.19.1",
-    "@types/node": "26.2.0",
-    "eslint": "10.13.0",
-    "oxlint": "1.87.0",
-    "oxlint-tsgolint": "7.0.2003",
-    "stylelint": "16.26.1",
-    "stylelint-config-standard": "39.0.1",
-    "tsx": "4.23.12",
+    "@types/node": "26.6.6",
+    "eslint": "10.14.0",
+    "oxlint": "1.90.0",
+    "oxlint-tsgolint": "7.0.2005",
+    "stylelint": "17.16.0",
+    "stylelint-config-standard": "40.0.0",
+    "tsx": "4.23.15",
     "typescript": "7.0.2"
   },
-  "packageManager": "pnpm@12.15.0",
+  "packageManager": "pnpm@12.16.1",
   "license": "MIT"
 }
