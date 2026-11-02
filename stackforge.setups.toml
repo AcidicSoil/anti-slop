@@ -21,7 +21,7 @@ description = "Stage complete enhanced @shadcn/lint (six upstream and thirteen G
 "tools/oxlint/shadcn-lint" = "integrations/shadcn-lint/package"
 
 [setups.stylex]
-description = "Stage StyleX ESLint token rules; preserve existing lint configuration and styling systems."
+description = "Stage Oxlint-compatible StyleX validation and token rules; preserve existing lint configuration and styling systems."
 
 [setups.stylex.package_json.devDependencies]
 "@stylexjs/eslint-plugin" = "0.19.1"

@@ -14,6 +14,7 @@ Anti-slop is first and foremost the ruleset I use with my work, projects, and te
 | --- | --- | --- |
 | TypeScript / JavaScript | Oxlint plugin | `install-anti-slop` |
 | CSS | Stylelint plugin | `install-anti-slop-css` |
+| StyleX | Oxlint-hosted StyleX and token-rule plugins (ESLint fallback) | `install-anti-slop-stylex` |
 | Python | Pylint / Astroid checker | `install-anti-slop-python` |
 | Rust | Clippy and rustc lint profiles | `install-anti-slop-rust` |
 | Go | `go/analysis` multichecker | `install-anti-slop-go` |
@@ -23,6 +24,7 @@ Install the language you want:
 ```bash
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop-css
+npx skills add AcidicSoil/anti-slop --skill install-anti-slop-stylex
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop-python
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop-rust
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop-go
@@ -33,6 +35,8 @@ The additional language implementations are downstream extensions maintained in 
 Tailwind v4 UI projects use the separate [enhanced shadcn/lint Stackforge setup](languages/shadcn/README.md): six upstream rules plus thirteen new Good CSS rules. The complete plugin is bundled as a versioned local package and rule activation remains subject to the project's reviewed design system.
 
 The optional `good-css` and `better-typography` agent skills complement the CSS and shadcn lint checks where installed. `tailwind-to-stylex` is only for explicit, scoped styling migration; neither anti-slop nor Stackforge triggers framework conversion. See the [shadcn setup guide](languages/shadcn/README.md) for PPM integration.
+
+StyleX uses [Oxlint-hosted StyleX and token checks](languages/stylex/README.md), with ESLint retained only for verified compatibility failures. The StyleX installer preserves existing Oxlint plugins, project design tokens, and Stylelint ownership.
 
 CSS uses [three Stylelint architecture rules](languages/css/README.md): stylesheet size, scoped ownership, and cross-feature dependencies. The CSS install skill also prescribes a verified migration of existing oversized or global stylesheets; it does not blindly auto-split CSS.
 
@@ -60,7 +64,7 @@ stackforge setup sync anti-slop
 stackforge setup list
 ```
 
-The fork currently publishes `anti-slop/typescript`, `anti-slop/css`, `anti-slop/shadcn`, `anti-slop/python`, `anti-slop/rust`, and `anti-slop/go`. `anti-slop/shadcn` stages the complete enhanced shadcn/lint package and a local dev dependency; project-aware registration and rule activation remain owned by PPM. TypeScript stages the plugin and lint command without changing the consumer's Oxlint dependencies. Install `oxlint` and a matching `@oxlint/plugins` through the target project's package manager if missing; existing versions remain untouched. Python stages the canonical checker. Rust stages both the Clippy and rustc profiles, while Go stages the canonical analyzer source and module for repository-specific integration because Stackforge does not yet merge those manifest formats.
+The fork currently publishes `anti-slop/typescript`, `anti-slop/css`, `anti-slop/stylex`, `anti-slop/shadcn`, `anti-slop/python`, `anti-slop/rust`, and `anti-slop/go`. `anti-slop/shadcn` stages the complete enhanced shadcn/lint package and a local dev dependency; project-aware registration and rule activation remain owned by PPM. TypeScript stages the plugin and lint command without changing the consumer's Oxlint dependencies. Install `oxlint` and a matching `@oxlint/plugins` through the target project's package manager if missing; existing versions remain untouched. Python stages the canonical checker. Rust stages both the Clippy and rustc profiles, while Go stages the canonical analyzer source and module for repository-specific integration because Stackforge does not yet merge those manifest formats.
 
 To inspect available skills first:
 

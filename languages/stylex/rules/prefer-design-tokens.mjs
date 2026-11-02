@@ -1,5 +1,5 @@
 // Enforce the shared color-token boundary in StyleX authored styles.
-// Native StyleX ESLint rules remain responsible for syntax and value validity.
+// Official StyleX plugin rules handle syntax and value validity, including through Oxlint.
 const COLOR_PROPERTIES = new Set([
   "color", "backgroundColor", "borderColor", "borderTopColor", "borderRightColor",
   "borderBottomColor", "borderLeftColor", "borderBlockColor", "borderInlineColor",

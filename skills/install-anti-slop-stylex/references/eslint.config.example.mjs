@@ -1,4 +1,5 @@
-// Merge this object into your existing ESLint flat config, or reuse its rules.
+// Fallback only: use if the installed Oxlint cannot execute both StyleX plugins.
+// Merge into an existing ESLint flat config; never run duplicate StyleX lint passes.
 // ESLint must use the project's existing JSX/TypeScript parser and file globs.
 // Keep shadcn in your existing Oxlint/ESLint setup when Tailwind is in use.
 import stylex from "@stylexjs/eslint-plugin";
