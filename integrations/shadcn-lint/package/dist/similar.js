@@ -50,7 +50,9 @@ function normalizeClass(token) {
 function isArbitraryValue(token) {
 	if (!token.includes("[")) return false;
 	const { base } = splitVariants(token);
-	return /-\[[^\]]*\]/.test(base) || /^\[[^\]]+:[^\]]+\]$/.test(base);
+	const open = base.indexOf("-[");
+	if (open !== -1 && base.includes("]", open + 2)) return true;
+	return /^\[[^\]]+\]$/.test(base) && base.slice(2, -2).includes(":");
 }
 const COLOR_PREFIX = /^(?:text-shadow|inset-shadow|inset-ring|drop-shadow|scrollbar-(?:thumb|track)|ring-offset|border(?:-[trblxyse]|-[bi][se])?|divide(?:-[xy])?|mask-(?:linear|radial|conic|[trblxy])-(?:from|to)|bg|text|ring|outline|fill|stroke|from|via|to|accent|caret|decoration|placeholder|shadow)-/;
 const PALETTE$1 = [
@@ -81,7 +83,7 @@ const PALETTE$1 = [
 	"pink",
 	"rose"
 ];
-const OPACITY_MODIFIER = /\/(?:[\w.%]+|\[[^\]]*\]|\([^)]*\))$/;
+const OPACITY_MODIFIER = /\/(?:[\w.%]+|\[[^[\]]*\]|\([^()]*\))$/;
 const PALETTE_RE = new RegExp(`${COLOR_PREFIX.source}(?:${PALETTE$1.join("|")})-\\d{2,3}(?:${OPACITY_MODIFIER.source})?$`);
 function isPaletteClass(token) {
 	return PALETTE_RE.test(normalizeClass(token));
@@ -986,6 +988,31 @@ function matchPattern(pattern, value) {
 function expand(target, captured) {
 	return target.replace("*", captured);
 }
+function isUncPath(file) {
+	return /^[\\/]{2}/.test(file);
+}
+function isInside(dir, file) {
+	const relative = path.relative(dir, file);
+	return relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+}
+function isStrayUncPath(file, ...within) {
+	return isUncPath(file) && !within.some((dir) => isInside(dir, file));
+}
+const BAD_SEGMENT = /^(?:\.|%2e){1,2}$|^node_modules$/i;
+function safeSegments(text) {
+	return !/%2f|%5c/i.test(text) && !text.split(/[\\/]/).some((segment) => BAD_SEGMENT.test(segment));
+}
+function isPackageTarget(target) {
+	return target.startsWith("./") && safeSegments(target.slice(2));
+}
+function packageTarget(dir, target, captured = "") {
+	if (!isPackageTarget(target) || !safeSegments(captured)) return null;
+	const file = path.resolve(dir, expand(target, captured));
+	return isInside(dir, file) ? file : null;
+}
+function isBareTarget(target) {
+	return /^[^./\\#][^:\\]*$/.test(target);
+}
 const tsconfigCache = /* @__PURE__ */ new Map();
 function signatureOf$1(files) {
 	return files.map((file) => `${file}:${mtimeOf(file) ?? "missing"}`).join("|");
@@ -998,10 +1025,11 @@ function readTsconfigChain(file, visiting, files) {
 	if (!json || typeof json !== "object") return [];
 	const dir = path.dirname(file);
 	const options = json.compilerOptions ?? {};
-	const base = options.baseUrl ? path.resolve(dir, options.baseUrl) : dir;
-	const own = Object.entries(options.paths ?? {}).map(([pattern, targets]) => ({
+	const base = typeof options.baseUrl === "string" && options.baseUrl ? path.resolve(dir, options.baseUrl) : dir;
+	const paths = options.paths && typeof options.paths === "object" && !Array.isArray(options.paths) ? options.paths : {};
+	const own = Object.entries(paths).map(([pattern, targets]) => ({
 		pattern,
-		targets: Array.isArray(targets) ? targets.map(String) : [],
+		targets: Array.isArray(targets) ? targets.filter((target) => typeof target === "string") : [],
 		base
 	}));
 	const inherited = [].concat(json.extends ?? []).flatMap((parent) => {
@@ -1011,8 +1039,19 @@ function readTsconfigChain(file, visiting, files) {
 	return [...own, ...inherited];
 }
 function tsconfigPaths(rootDir) {
-	const file = ["tsconfig.json", "jsconfig.json"].map((name) => path.join(rootDir, name)).find((candidate) => isFile(candidate));
-	if (!file) return [];
+	for (const name of [
+		"tsconfig.json",
+		"jsconfig.json",
+		"tsconfig.base.json"
+	]) {
+		const file = path.join(rootDir, name);
+		if (!isFile(file)) continue;
+		const entries = readTsconfig(file);
+		if (entries.length) return entries;
+	}
+	return [];
+}
+function readTsconfig(file) {
 	const cached = tsconfigCache.get(file);
 	if (cached?.files.length && signatureOf$1(cached.files) === cached.signature) return cached.entries;
 	tsconfigCache.set(file, {
@@ -1043,46 +1082,55 @@ function readPackageJson(dir) {
 	});
 	return json;
 }
-function pickTarget(value) {
-	if (typeof value === "string") return value;
+const MAX_CONDITION_DEPTH = 32;
+const PREFERRED_CONDITIONS = [
+	"import",
+	"default",
+	"require",
+	"node",
+	"types"
+];
+function pickTarget(value, valid, depth = 0) {
+	if (typeof value === "string") return valid(value) ? value : null;
+	if (depth >= 32) return null;
 	if (Array.isArray(value)) {
 		for (const item of value) {
-			const picked = pickTarget(item);
+			const picked = pickTarget(item, valid, depth + 1);
 			if (picked) return picked;
 		}
 		return null;
 	}
 	if (value && typeof value === "object") {
-		for (const key of [
-			"import",
-			"default",
-			"require",
-			"node",
-			"types"
-		]) if (key in value) {
-			const picked = pickTarget(value[key]);
+		for (const key of PREFERRED_CONDITIONS) if (key in value) {
+			const picked = pickTarget(value[key], valid, depth + 1);
 			if (picked) return picked;
 		}
 		for (const key of Object.keys(value)) {
-			if (key.startsWith(".")) continue;
-			const picked = pickTarget(value[key]);
+			if (key.startsWith(".") || PREFERRED_CONDITIONS.includes(key)) continue;
+			const picked = pickTarget(value[key], valid, depth + 1);
 			if (picked) return picked;
 		}
 	}
 	return null;
 }
-function mapSubpath(map, subpath) {
+function mapSubpath(map, subpath, dir, bare = false) {
 	const keys = Object.keys(map).filter((key) => key.startsWith(".") || key.startsWith("#")).sort((a, b) => b.length - a.length);
 	const out = [];
 	for (const key of keys) {
 		const captured = matchPattern(key, subpath);
-		if (captured === null) continue;
-		const target = pickTarget(map[key]);
-		if (target) out.push(expand(target, captured));
+		if (captured === null || !safeSegments(captured)) continue;
+		const target = pickTarget(map[key], (t) => isPackageTarget(t) || bare && isBareTarget(t));
+		if (!target) continue;
+		if (!target.startsWith("./")) {
+			out.push({ spec: expand(target, captured) });
+			continue;
+		}
+		const file = packageTarget(dir, target, captured);
+		if (file) out.push({ file });
 	}
 	return out;
 }
-function packageDirectory(name, fromDir) {
+function packageDirectory$1(name, fromDir) {
 	const found = findUp(fromDir, path.join("node_modules", name));
 	return found ? realpath(found) : null;
 }
@@ -1102,6 +1150,9 @@ function splitPackageSpecifier(spec) {
 	};
 }
 function candidatesFor(spec, fromDir, rootDir, options = {}) {
+	return collectCandidates(spec, fromDir, rootDir, options).filter((candidate) => !isStrayUncPath(candidate, rootDir, fromDir));
+}
+function collectCandidates(spec, fromDir, rootDir, options) {
 	const out = [];
 	if (spec.startsWith("./") || spec.startsWith("../") || spec === "." || spec === "..") {
 		out.push(path.resolve(fromDir, spec));
@@ -1119,8 +1170,9 @@ function candidatesFor(spec, fromDir, rootDir, options = {}) {
 	if (spec.startsWith("#")) {
 		const imports = readPackageJson(rootDir)?.imports;
 		if (imports && typeof imports === "object") {
-			for (const target of mapSubpath(imports, spec)) out.push(path.resolve(rootDir, target));
-			for (const target of mapSubpath(imports, `${spec}/*`)) out.push(path.dirname(path.resolve(rootDir, target)));
+			for (const target of mapSubpath(imports, spec, rootDir, true)) if (target.file) out.push(target.file);
+			else if (target.spec) packageCandidates(target.spec, rootDir, out);
+			for (const target of mapSubpath(imports, `${spec}/*`, rootDir)) if (target.file) out.push(path.dirname(target.file));
 		}
 		return out;
 	}
@@ -1135,24 +1187,22 @@ function candidatesFor(spec, fromDir, rootDir, options = {}) {
 		out.push(path.join(rootDir, "src/lib", kit[1] ?? ""));
 		return out;
 	}
+	packageCandidates(spec, rootDir, out, fromDir);
+	return out;
+}
+function packageCandidates(spec, rootDir, out, fromDir = rootDir) {
 	const pkg = splitPackageSpecifier(spec);
-	if (!pkg) return out;
-	const dir = selfPackageDirectory(pkg.name, rootDir) ?? selfPackageDirectory(pkg.name, fromDir) ?? packageDirectory(pkg.name, rootDir) ?? packageDirectory(pkg.name, fromDir);
-	if (!dir) return out;
+	if (!pkg) return;
+	const dir = selfPackageDirectory(pkg.name, rootDir) ?? selfPackageDirectory(pkg.name, fromDir) ?? packageDirectory$1(pkg.name, rootDir) ?? packageDirectory$1(pkg.name, fromDir);
+	if (!dir) return;
 	const subpath = pkg.subpath ? `./${pkg.subpath}` : ".";
 	const exportsMap = readPackageJson(dir)?.exports;
 	if (exportsMap && typeof exportsMap === "object") {
-		for (const target of mapSubpath(exportsMap, subpath)) out.push(path.resolve(dir, target));
-		for (const target of mapSubpath(exportsMap, `${subpath}/*`)) out.push(path.dirname(path.resolve(dir, target)));
+		for (const target of mapSubpath(exportsMap, subpath, dir)) if (target.file) out.push(target.file);
+		for (const target of mapSubpath(exportsMap, `${subpath}/*`, dir)) if (target.file) out.push(path.dirname(target.file));
 	}
-	if (pkg.subpath) {
-		out.push(path.join(dir, pkg.subpath));
-		out.push(path.join(dir, "src", pkg.subpath));
-	} else {
-		out.push(dir);
-		out.push(path.join(dir, "src"));
-	}
-	return out;
+	const own = pkg.subpath ? [path.join(dir, pkg.subpath), path.join(dir, "src", pkg.subpath)] : [dir, path.join(dir, "src")];
+	for (const file of own) if (isInside(dir, file)) out.push(file);
 }
 function resolveDirectory(spec, fromDir, rootDir) {
 	return memoize(`resolve-dir:${fromDir}\u0000${rootDir}\u0000${spec}`, () => {
@@ -1276,6 +1326,104 @@ function uiDirectory(project) {
 }
 
 //#endregion
+//#region src/project/stylesheets.ts
+function resolveStylesheetImport(base, id) {
+	const resolved = resolveStylesheet(base, id);
+	if (resolved) return realpath(resolved);
+	const file = resolveFile(id, base, packageRoot(path.join(base, "index.css")) ?? base, [".css"]);
+	return file && isStylesheet(file) ? file : null;
+}
+function resolveStylesheet(base, id) {
+	if (id === "tailwindcss") return resolveStylesheet(base, "tailwindcss/index.css");
+	if (id.startsWith(".") || path.isAbsolute(id)) {
+		const file = path.resolve(base, id);
+		if (isStrayUncPath(id, base) || isStrayUncPath(file, base)) return null;
+		return stylesheetAt(path.dirname(file), path.basename(id));
+	}
+	const match = id.match(/^(@[^/]+\/[^/]+|[^/]+)(?:\/(.*))?$/);
+	if (!match) return null;
+	const [, name, subpath] = match;
+	const pkgDir = packageDirectory(base, name);
+	if (!pkgDir) return null;
+	let pkg = {};
+	try {
+		pkg = JSON.parse(fs.readFileSync(path.join(pkgDir, "package.json"), "utf-8"));
+	} catch {}
+	const exports = pkg.exports;
+	if (subpath) {
+		const target = exports && typeof exports === "object" ? exportedStyle(pkgDir, exports, subpath) : null;
+		if (target) return existingFile(target);
+		const file = path.join(pkgDir, subpath);
+		if (!isInside(pkgDir, file)) return null;
+		return stylesheetAt(path.dirname(file), path.basename(subpath));
+	}
+	const root = typeof exports === "string" ? exports : exports && typeof exports === "object" ? styleTarget(exports["."] ?? exports) : null;
+	const rootFile = root ? packageTarget(pkgDir, root) : null;
+	if (rootFile && existingFile(rootFile)) return rootFile;
+	const main = typeof pkg.main === "string" && isStylesheet(pkg.main) ? pkg.main : null;
+	for (const target of [pkg.style, main]) {
+		if (typeof target !== "string") continue;
+		const joined = path.join(pkgDir, target);
+		if (!isInside(pkgDir, joined)) continue;
+		const file = existingFile(joined);
+		if (file) return file;
+	}
+	return stylesheetAt(pkgDir, "index");
+}
+function isStylesheet(file) {
+	return path.extname(file).toLowerCase() === ".css";
+}
+function existingFile(candidate) {
+	try {
+		return fs.statSync(candidate).isFile() ? candidate : null;
+	} catch {
+		return null;
+	}
+}
+function stylesheetAt(dir, name) {
+	const base = path.join(dir, name);
+	return existingFile(base) ?? existingFile(`${base}.css`) ?? existingFile(path.join(base, "index.css"));
+}
+function styleTarget(entry, depth = 0) {
+	if (typeof entry === "string") return isPackageTarget(entry) ? entry : null;
+	if (!entry || typeof entry !== "object") return null;
+	if (depth >= 32) return null;
+	const record = entry;
+	for (const key of ["style", "default"]) {
+		const target = styleTarget(record[key], depth + 1);
+		if (target) return target;
+	}
+	return null;
+}
+function exportedStyle(pkgDir, exports, subpath) {
+	const exact = styleTarget(exports[`./${subpath}`]);
+	if (exact) return packageTarget(pkgDir, exact);
+	const patterns = Object.keys(exports).filter((key) => key.startsWith("./") && key.includes("*")).sort((a, b) => b.length - a.length);
+	for (const key of patterns) {
+		const star = key.indexOf("*");
+		const prefix = key.slice(2, star);
+		const suffix = key.slice(star + 1);
+		if (subpath.length < prefix.length + suffix.length || !subpath.startsWith(prefix) || !subpath.endsWith(suffix)) continue;
+		const target = styleTarget(exports[key]);
+		if (!target) continue;
+		const file = packageTarget(pkgDir, target, subpath.slice(prefix.length, subpath.length - suffix.length));
+		if (file) return file;
+	}
+	return null;
+}
+function packageDirectory(base, name) {
+	let dir = base;
+	for (let depth = 0; depth < 32; depth++) {
+		const candidate = path.join(dir, "node_modules", name);
+		if (existingFile(path.join(candidate, "package.json"))) return candidate;
+		const parent = path.dirname(dir);
+		if (parent === dir) break;
+		dir = parent;
+	}
+	return null;
+}
+
+//#endregion
 //#region src/project/theme-scales.ts
 const NAMESPACES = [
 	["inset-shadow", "inset-shadow"],
@@ -1308,6 +1456,10 @@ function themeScalesOf(declarations) {
 		const initial = value.trim() === "initial";
 		if (property === "*") {
 			if (initial) for (const [, scale] of NAMESPACES) resetScale(scale);
+			continue;
+		}
+		if (property === "spacing") {
+			if (!initial) reset.delete("spacing");
 			continue;
 		}
 		const namespace = NAMESPACES.find(([ns]) => property.startsWith(`${ns}-`));
@@ -1427,19 +1579,20 @@ function parseDeclarations(css) {
 			});
 			start = i + 1;
 		} else if (char === "}" || char === ";") {
-			const match = stripped.slice(start, i).match(/^\s*--((?:[\w-]+\*?)|\*)\s*:\s*([\s\S]+?)\s*$/);
+			const match = stripped.slice(start, i).match(/^\s*--((?:[\w-]+\*?)|\*)\s*:\s*([\s\S]+)$/);
 			const scope = stack[stack.length - 1];
 			if (match && !scope?.dark) {
+				const value = match[2].trimEnd() || match[2];
 				const scoped = scope?.scoped ?? false;
 				if (!scoped || !values.has(match[1]) || scopedNames.has(match[1])) {
-					values.set(match[1], match[2]);
+					values.set(match[1], value);
 					if (scoped) scopedNames.add(match[1]);
 					else scopedNames.delete(match[1]);
 				}
 				if (scope?.theme) themeNames.add(match[1]);
 				declarations.push({
 					name: match[1],
-					value: match[2],
+					value,
 					theme: scope?.theme ?? false
 				});
 			}
@@ -1454,29 +1607,50 @@ function parseDeclarations(css) {
 		declarations
 	};
 }
-function resolveVariables(value, values, depth = 0) {
+const RESOLVE_BUDGET = 1e5;
+function resolveVariables(value, values, depth = 0, budget = { left: RESOLVE_BUDGET }) {
 	if (!value.includes("var(")) return value;
 	if (depth > 6) return null;
 	let failed = false;
 	const out = value.replace(/var\(\s*--([\w-]+)\s*(?:,\s*([^()]*(?:\([^()]*\)[^()]*)*))?\)/g, (_, name, fallback) => {
+		if (failed) return "";
 		const inner = values.get(name) ?? fallback;
 		if (inner === void 0) {
 			failed = true;
 			return "";
 		}
-		const resolved = resolveVariables(inner.trim(), values, depth + 1);
-		if (resolved === null) failed = true;
+		const resolved = resolveVariables(inner.trim(), values, depth + 1, budget);
+		budget.left -= 1 + (resolved?.length ?? 0);
+		if (resolved === null || budget.left < 0) failed = true;
 		return resolved ?? "";
 	});
 	return failed ? null : out;
 }
+const IMPORT_HEAD = /@import\s+(?:url\(\s*)?["']([^"']+)["']/g;
 function parseImports(css) {
 	const out = [];
-	for (const match of stripComments(css).matchAll(/@import\s+(?:url\(\s*)?["']([^"']+)["']\s*\)?[^;]*;/g)) out.push(match[1]);
+	const text = stripComments(css);
+	const re = new RegExp(IMPORT_HEAD);
+	for (let match = re.exec(text); match; match = re.exec(text)) {
+		const end = text.indexOf(";", re.lastIndex);
+		if (end === -1) break;
+		out.push(match[1]);
+		re.lastIndex = end + 1;
+	}
 	return out;
 }
 function parseTailwindPrefix(css) {
-	for (const match of stripComments(css).matchAll(/@import\s+(?:url\(\s*)?["']tailwindcss(?:\/[^"']*)?["']\s*\)?[^;]*?\bprefix\(\s*([\w-]+)\s*\)/g)) return match[1];
+	const text = stripComments(css);
+	const re = new RegExp(IMPORT_HEAD);
+	for (let match = re.exec(text); match; match = re.exec(text)) {
+		if (!/^tailwindcss(?:\/|$)/.test(match[1])) continue;
+		const end = text.indexOf(";", re.lastIndex);
+		const rest = text.slice(re.lastIndex, end === -1 ? text.length : end);
+		const prefix = /\bprefix\(\s*([\w-]+)\s*\)/.exec(rest);
+		if (prefix) return prefix[1];
+		if (end === -1) break;
+		re.lastIndex = end;
+	}
 	return null;
 }
 function parseUtilities(css) {
@@ -1538,15 +1712,13 @@ function readTheme(cssFile, seen, read, imports, fromPackage = false, ownPackage
 	if (!fromPackage) read.prefix ??= parseTailwindPrefix(css);
 	if (/@(?:config|plugin)\s/.test(stripComments(css))) read.modules = true;
 	const dir = path.dirname(cssFile);
-	const root = packageRoot(cssFile) ?? dir;
 	for (const spec of parseImports(css)) {
 		if (spec === "tailwindcss" || spec.startsWith("tailwindcss/")) read.tailwind = true;
-		const target = resolveFile(spec, dir, root, [".css"]);
+		const target = resolveStylesheetImport(dir, spec);
 		if (!target) {
 			read.missingImports.push({
 				spec,
-				fromDir: dir,
-				rootDir: root
+				fromDir: dir
 			});
 			continue;
 		}
@@ -1570,7 +1742,7 @@ function readTheme(cssFile, seen, read, imports, fromPackage = false, ownPackage
 	}
 }
 function signatureOf(read) {
-	return [...read.files.map((file) => `${file}:${mtimeOf(file) ?? "missing"}`), ...read.missingImports.map(({ spec, fromDir, rootDir }) => `${fromDir}:${spec}:${resolveFile(spec, fromDir, rootDir, [".css"]) ?? "missing"}`)].join("|");
+	return [...read.files.map((file) => `${file}:${mtimeOf(file) ?? "missing"}`), ...read.missingImports.map(({ spec, fromDir }) => `${fromDir}:${spec}:${resolveStylesheetImport(fromDir, spec) ?? "missing"}`)].join("|");
 }
 const NO_IMPORTS = [];
 const themeImports = /* @__PURE__ */ new Map();
@@ -1896,4 +2068,4 @@ function didYouMean(value, candidates, budget = value.length < 6 ? 1 : 2) {
 }
 
 //#endregion
-export { isNamedColor as A, formatPx as B, resolveAlias as C, resolveFile as D, packageRoot as E, dirOf as F, isMarkerClass as G, COLOR_PREFIX as H, isFile as I, replaceClass as J, isPaletteClass as K, memoize as L, withoutVariableChannelColors as M, NODE_MODULES as N, PALETTE as O, TTL as P, mtimeOf as R, projectFor as S, warnOnce as T, OPACITY_MODIFIER as U, lengthInPx as V, isArbitraryValue as W, splitVariants as X, splitClasses as Y, withBase as Z, themeFileFor as _, declaresClass as a, utilityPrefixesOf as b, moduleThemeEntryFor as c, scaleFor as d, scopedColorTokensFor as f, tailwindPrefixFor as g, tailwindEntryFor as h, colorValuesFor as i, parseColor as j, colorDistance as k, parseClassSelectors as l, spacingBaseFor as m, editDistance as n, declaresUtility as o, setThemeImports as p, normalizeClass as q, colorTokensFor as r, knownClassesFor as s, didYouMean as t, parseImports as u, themeScalesFor as v, uiDirectory as w, utilityPropertiesOf as x, themeVocabularyFor as y, realpath as z };
+export { colorDistance as A, realpath as B, projectFor as C, packageRoot as D, warnOnce as E, TTL as F, isArbitraryValue as G, lengthInPx as H, dirOf as I, normalizeClass as J, isMarkerClass as K, isFile as L, parseColor as M, withoutVariableChannelColors as N, resolveFile as O, NODE_MODULES as P, withBase as Q, memoize as R, resolveStylesheetImport as S, uiDirectory as T, COLOR_PREFIX as U, formatPx as V, OPACITY_MODIFIER as W, splitClasses as X, replaceClass as Y, splitVariants as Z, themeFileFor as _, declaresClass as a, utilityPrefixesOf as b, moduleThemeEntryFor as c, scaleFor as d, scopedColorTokensFor as f, tailwindPrefixFor as g, tailwindEntryFor as h, colorValuesFor as i, isNamedColor as j, PALETTE as k, parseClassSelectors as l, spacingBaseFor as m, editDistance as n, declaresUtility as o, setThemeImports as p, isPaletteClass as q, colorTokensFor as r, knownClassesFor as s, didYouMean as t, parseImports as u, themeScalesFor as v, resolveAlias as w, utilityPropertiesOf as x, themeVocabularyFor as y, mtimeOf as z };

@@ -1,6 +1,4 @@
 /// <reference path="./eslint-augmentation.d.cts" />
-import "cn/compiler";
-
 //#region src/sites/readers/types.d.ts
 
 type Visitors = Record<string, (node: any) => void>;

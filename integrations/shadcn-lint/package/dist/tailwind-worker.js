@@ -1,4 +1,4 @@
-import { D as resolveFile, E as packageRoot, X as splitVariants, t as didYouMean, u as parseImports } from "./similar.js";
+import { S as resolveStylesheetImport, Z as splitVariants, t as didYouMean, u as parseImports } from "./similar.js";
 import { createRequire } from "node:module";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -8,6 +8,8 @@ import { pathToFileURL } from "node:url";
 //#region src/tailwind/oracle.ts
 const SIGNATURE_TTL = 1e3;
 const FONT_SIZE = /(?:^|[;{\s])font-size\s*:/;
+const MAX_CANDIDATE_LENGTH = 1e4;
+const MAX_VARIANTS = 64;
 const loaded = /* @__PURE__ */ new Map();
 let generations = 0;
 function resolveFrom(base, id) {
@@ -31,7 +33,7 @@ function* tailwindImporters(cssFile) {
 				yield path.dirname(file);
 				continue;
 			}
-			const resolved = resolveImport(path.dirname(file), id);
+			const resolved = resolveStylesheetImport(path.dirname(file), id);
 			if (resolved) queue.push(realpathOf(resolved));
 		}
 	}
@@ -87,86 +89,6 @@ async function importModule(id, base) {
 		module: mod.default ?? mod
 	};
 }
-function existingFile(candidate) {
-	try {
-		return fs.statSync(candidate).isFile() ? candidate : null;
-	} catch {
-		return null;
-	}
-}
-function stylesheetAt(dir, name) {
-	const base = path.join(dir, name);
-	return existingFile(base) ?? existingFile(`${base}.css`) ?? existingFile(path.join(base, "index.css"));
-}
-function styleTarget(entry) {
-	if (typeof entry === "string") return entry;
-	if (!entry || typeof entry !== "object") return null;
-	const record = entry;
-	for (const key of ["style", "default"]) {
-		const target = styleTarget(record[key]);
-		if (target) return target;
-	}
-	return null;
-}
-function exportedStyle(exports, subpath) {
-	const exact = styleTarget(exports[`./${subpath}`]);
-	if (exact) return exact;
-	const patterns = Object.keys(exports).filter((key) => key.startsWith("./") && key.includes("*")).sort((a, b) => b.length - a.length);
-	for (const key of patterns) {
-		const star = key.indexOf("*");
-		const prefix = key.slice(2, star);
-		const suffix = key.slice(star + 1);
-		if (subpath.length < prefix.length + suffix.length || !subpath.startsWith(prefix) || !subpath.endsWith(suffix)) continue;
-		const target = styleTarget(exports[key]);
-		if (!target) continue;
-		return target.replace("*", subpath.slice(prefix.length, subpath.length - suffix.length));
-	}
-	return null;
-}
-function packageDirectory(base, name) {
-	let dir = base;
-	for (let depth = 0; depth < 32; depth++) {
-		const candidate = path.join(dir, "node_modules", name);
-		if (existingFile(path.join(candidate, "package.json"))) return candidate;
-		const parent = path.dirname(dir);
-		if (parent === dir) break;
-		dir = parent;
-	}
-	return null;
-}
-function resolveStylesheet(base, id) {
-	if (id === "tailwindcss") return resolveStylesheet(base, "tailwindcss/index.css");
-	if (id.startsWith(".") || path.isAbsolute(id)) return stylesheetAt(path.dirname(path.resolve(base, id)), path.basename(id));
-	const match = id.match(/^(@[^/]+\/[^/]+|[^/]+)(?:\/(.*))?$/);
-	if (!match) return null;
-	const [, name, subpath] = match;
-	const pkgDir = packageDirectory(base, name);
-	if (!pkgDir) return null;
-	let pkg = {};
-	try {
-		pkg = JSON.parse(fs.readFileSync(path.join(pkgDir, "package.json"), "utf-8"));
-	} catch {}
-	const exports = pkg.exports;
-	if (subpath) {
-		const target = exports && typeof exports === "object" ? exportedStyle(exports, subpath) : null;
-		if (target) return existingFile(path.join(pkgDir, target));
-		return stylesheetAt(path.dirname(path.join(pkgDir, subpath)), path.basename(subpath));
-	}
-	const root = typeof exports === "string" ? exports : exports && typeof exports === "object" ? styleTarget(exports["."] ?? exports) : null;
-	for (const target of [
-		root,
-		pkg.style,
-		pkg.main
-	]) {
-		if (typeof target !== "string") continue;
-		const file = existingFile(path.join(pkgDir, target));
-		if (file) return file;
-	}
-	return stylesheetAt(pkgDir, "index");
-}
-function resolveImport(base, id) {
-	return resolveStylesheet(base, id) ?? resolveFile(id, base, packageRoot(path.join(base, "index.css")) ?? base, [".css"]);
-}
 function realpathOf(file) {
 	try {
 		return fs.realpathSync.native(file);
@@ -199,7 +121,7 @@ async function build(cssFile) {
 				base,
 				content: ""
 			};
-			const resolved = resolveImport(base, id);
+			const resolved = resolveStylesheetImport(base, id);
 			if (!resolved) throw new Error(`@import "${id}" could not be resolved from ${base}`);
 			const file = realpathOf(resolved);
 			files.push(file);
@@ -257,11 +179,28 @@ function variantKnown(system, variant) {
 	if (system.staticVariants.includes(name)) return true;
 	return system.functionalVariants.some((prefix) => name === prefix || name.startsWith(`${prefix}-`));
 }
+function checkable(candidate) {
+	return candidate.length <= MAX_CANDIDATE_LENGTH && splitVariants(candidate).variants.length <= MAX_VARIANTS;
+}
+function cssOf(system, candidate) {
+	try {
+		return system.ds.candidatesToCss([candidate])[0];
+	} catch {
+		return;
+	}
+}
+function cssOfAll(system, candidates) {
+	try {
+		return system.ds.candidatesToCss(candidates);
+	} catch {
+		return candidates.map((candidate) => cssOf(system, candidate));
+	}
+}
 function suggestionFor(system, candidate) {
 	const { variants, base } = splitVariants(candidate);
 	const prefixed = system.prefix !== null && variants[0] === system.prefix;
 	const probe = prefixed ? `${system.prefix}:${base}` : base;
-	if (variants.length && system.ds.candidatesToCss([probe])[0] !== null) {
+	if (variants.length && typeof cssOf(system, probe) === "string") {
 		let changed = false;
 		const fixed = variants.map((variant, i) => {
 			if (prefixed && i === 0) return variant;
@@ -284,7 +223,7 @@ function baseKnownOf(system, candidate) {
 	if (!variants.length) return false;
 	const bare = system.prefix && variants[0] === system.prefix ? `${system.prefix}:${base}` : base;
 	if (variants.length === (bare === base ? 0 : 1)) return false;
-	return system.ds.candidatesToCss([bare])[0] !== null;
+	return typeof cssOf(system, bare) === "string";
 }
 async function query(cssFile, candidates) {
 	let system;
@@ -296,18 +235,20 @@ async function query(cssFile, candidates) {
 			reason: error.message
 		};
 	}
-	const css = system.ds.candidatesToCss(candidates);
+	const checked = candidates.filter(checkable);
+	const css = cssOfAll(system, checked);
 	const unknown = [];
 	const fontSizes = [];
-	for (let i = 0; i < candidates.length; i++) {
+	for (let i = 0; i < checked.length; i++) {
+		if (css[i] === void 0) continue;
 		if (css[i] !== null) {
-			if (FONT_SIZE.test(css[i])) fontSizes.push(candidates[i]);
+			if (FONT_SIZE.test(css[i])) fontSizes.push(checked[i]);
 			continue;
 		}
 		unknown.push({
-			token: candidates[i],
-			suggestion: suggestionFor(system, candidates[i]),
-			baseKnown: baseKnownOf(system, candidates[i])
+			token: checked[i],
+			suggestion: suggestionFor(system, checked[i]),
+			baseKnown: baseKnownOf(system, checked[i])
 		});
 	}
 	return {

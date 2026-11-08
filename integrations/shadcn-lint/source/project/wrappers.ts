@@ -42,7 +42,9 @@ type FileWrappers = Map<string, Forwards>
 
 const NO_FORWARDS: Forwards = { props: new Map(), spread: null }
 
-const CLASS_PROP = /^[^:]*class(name)?s?$/i
+// A class prop by name, as collect reads class attributes: never a
+// data-* or aria-* attribute.
+const CLASS_PROP = /^(?!data-|aria-)[^:]*class(name)?s?$/i
 const MAIN_CLASS_PROP = /^(class|className|class:list)$/
 
 // The prop of a wrapper an attribute sets. `class` and `className` are
@@ -384,9 +386,10 @@ function build(
       })
     }
   }
-  const index = componentsFor(file)
-  // A tag with no import is also looked up in settings.shadcn.ui.
-  const tagIndex = ui.length ? componentsFor(file, ui) : index
+  // settings.shadcn.ui owns tags and resolved imports alike. An import
+  // that resolves nowhere is matched by name in components.json's only.
+  const index = componentsFor(file, ui)
+  const unresolvedIndex = ui.length ? componentsFor(file) : index
   const { bindings, candidates } = indexLocalBindings(ast)
   const declaring = new Set<string>()
   const asking = new Set<string>()
@@ -409,11 +412,11 @@ function build(
     const imported = imports.get(name.root)
     if (!imported) {
       if (name.property !== null) return null
-      if (tagIndex.has(name.root)) {
+      if (index.has(name.root)) {
         return {
           target: {
             component: name.root,
-            file: tagIndex.files.get(name.root) ?? null,
+            file: index.files.get(name.root) ?? null,
           },
         }
       }
@@ -428,21 +431,26 @@ function build(
           deps
         )
       : null
+    const member = importedName.member
+      ? definingExportOf(importedName.source, importedName.member, file, deps)
+      : null
     const component = componentFromImport(
       index,
       binding,
       importedName,
-      patterns
+      patterns,
+      member,
+      ui
     )
     if (component) return { target: component }
     if (!binding) {
       // Not cached: the file the name points at may yet be created.
       complete = false
-      return index.has(importedName.name)
+      return unresolvedIndex.has(importedName.name)
         ? {
             target: {
               component: importedName.name,
-              file: index.files.get(importedName.name) ?? null,
+              file: unresolvedIndex.files.get(importedName.name) ?? null,
             },
           }
         : null
@@ -719,6 +727,128 @@ export function wrapperTargetOf(
   ).target
 }
 
+// Whether a component provably adds no classes of its own: a plain
+// function that hands its props to a Base UI part and sets nothing but
+// static data attributes, the way a shadcn trigger does. Anything else,
+// or a file that cannot be read, is assumed to paint.
+export function addsNoClasses(file: string, component: string) {
+  if (NODE_MODULES.test(file) || isSfc(file)) return false
+  const mtime = mtimeOf(file)
+  if (mtime === null) return false
+  let entry = classless.get(file)
+  if (!entry || entry.mtime !== mtime) {
+    entry = { mtime, components: classlessComponentsOf(file) }
+    classless.set(file, entry)
+  }
+  return entry.components.has(component)
+}
+
+const classless = new Map<string, { mtime: number; components: Set<string> }>()
+
+function classlessComponentsOf(file: string) {
+  const out = new Set<string>()
+  let ast: any
+  try {
+    ast = parseSource(fs.readFileSync(file, "utf-8"), file)
+  } catch {
+    return out
+  }
+  const { bindings, candidates } = indexLocalBindings(ast)
+  for (const name of candidates) {
+    if (provesClassless(ast, bindings, name)) out.add(name)
+  }
+  return out
+}
+
+const BASE_UI = /^@base-ui\/react(\/[^/]+)?$/
+const STATIC_DATA_ATTRIBUTE = /^data-[\w-]+$/
+
+function provesClassless(
+  ast: any,
+  bindings: Map<string, any>,
+  component: string
+) {
+  const fn = componentFunction(bindings, component)
+  // Bound directly: a call around it, `memo()` or anything else, may
+  // add classes of its own.
+  if (!fn || bindings.get(component) !== fn || fn.async || fn.generator) {
+    return false
+  }
+  // One `{ ...props }` or `props` parameter and nothing else.
+  const param = fn.params?.[0]
+  if (fn.params.length !== 1) return false
+  const { named, carriers } = propBindings(fn)
+  if (named.size || carriers.size !== 1) return false
+  if (
+    param.type === "ObjectPattern" &&
+    param.properties.some((prop: any) => prop.type !== "RestElement")
+  ) {
+    return false
+  }
+  if (param.type !== "ObjectPattern" && param.type !== "Identifier") {
+    return false
+  }
+  const [props] = carriers
+  // A single return of a self-closing element and nothing else.
+  let body = fn.body
+  if (body?.type === "BlockStatement") {
+    if (body.body.length !== 1 || body.body[0].type !== "ReturnStatement") {
+      return false
+    }
+    body = body.body[0].argument
+  }
+  while (body?.type === "ParenthesizedExpression") body = body.expression
+  if (
+    body?.type !== "JSXElement" ||
+    !body.openingElement?.selfClosing ||
+    body.children?.length
+  ) {
+    return false
+  }
+  // The element is a Base UI part, which paints nothing.
+  const name = jsxElementNameOf(body.openingElement.name)
+  if (!name?.root || (name.property ?? "").includes(".")) return false
+  if (name.root === props || name.root === fn.id?.name) return false
+  if (!importsFromBaseUi(ast, name.root)) return false
+  let spreads = 0
+  for (const attr of body.openingElement.attributes ?? []) {
+    if (attr.type === "JSXSpreadAttribute") {
+      if (attr.argument?.type !== "Identifier" || attr.argument.name !== props)
+        return false
+      spreads++
+      continue
+    }
+    if (
+      attr.type !== "JSXAttribute" ||
+      attr.name?.type !== "JSXIdentifier" ||
+      !STATIC_DATA_ATTRIBUTE.test(attr.name.name) ||
+      attr.value?.type !== "Literal" ||
+      typeof attr.value.value !== "string"
+    ) {
+      return false
+    }
+  }
+  return spreads === 1
+}
+
+// A value import, not a type, of `@base-ui/react` or one of its parts.
+function importsFromBaseUi(ast: any, local: string) {
+  for (const statement of ast.body) {
+    if (statement.type !== "ImportDeclaration") continue
+    if (statement.importKind === "type") continue
+    for (const spec of statement.specifiers ?? []) {
+      if (spec.local?.name !== local) continue
+      return (
+        spec.importKind !== "type" &&
+        typeof statement.source?.value === "string" &&
+        BASE_UI.test(statement.source.value)
+      )
+    }
+  }
+  return false
+}
+
 export function clearWrapperCache() {
   cache.clear()
+  classless.clear()
 }

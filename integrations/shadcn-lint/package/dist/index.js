@@ -1,4 +1,4 @@
-import { A as isNamedColor, B as formatPx, C as resolveAlias, D as resolveFile, E as packageRoot, F as dirOf, G as isMarkerClass, H as COLOR_PREFIX, I as isFile, J as replaceClass, K as isPaletteClass, L as memoize, M as withoutVariableChannelColors, N as NODE_MODULES, O as PALETTE, P as TTL, R as mtimeOf, S as projectFor, T as warnOnce, U as OPACITY_MODIFIER, V as lengthInPx, W as isArbitraryValue$1, X as splitVariants, Y as splitClasses, Z as withBase, _ as themeFileFor, a as declaresClass, b as utilityPrefixesOf, c as moduleThemeEntryFor, d as scaleFor, f as scopedColorTokensFor, g as tailwindPrefixFor, h as tailwindEntryFor, i as colorValuesFor, j as parseColor, k as colorDistance, l as parseClassSelectors, m as spacingBaseFor, n as editDistance, o as declaresUtility, p as setThemeImports, q as normalizeClass, r as colorTokensFor, s as knownClassesFor, t as didYouMean, v as themeScalesFor, w as uiDirectory, x as utilityPropertiesOf, y as themeVocabularyFor, z as realpath } from "./similar.js";
+import { A as colorDistance, B as realpath, C as projectFor, D as packageRoot, E as warnOnce, F as TTL, G as isArbitraryValue$1, H as lengthInPx, I as dirOf, J as normalizeClass, K as isMarkerClass, L as isFile, M as parseColor, N as withoutVariableChannelColors, O as resolveFile, P as NODE_MODULES, Q as withBase, R as memoize, T as uiDirectory, U as COLOR_PREFIX, V as formatPx, W as OPACITY_MODIFIER, X as splitClasses, Y as replaceClass, Z as splitVariants, _ as themeFileFor, a as declaresClass, b as utilityPrefixesOf, c as moduleThemeEntryFor, d as scaleFor, f as scopedColorTokensFor, g as tailwindPrefixFor, h as tailwindEntryFor, i as colorValuesFor, j as isNamedColor, k as PALETTE, l as parseClassSelectors, m as spacingBaseFor, n as editDistance, o as declaresUtility, p as setThemeImports, q as isPaletteClass, r as colorTokensFor, s as knownClassesFor, t as didYouMean, v as themeScalesFor, w as resolveAlias, x as utilityPropertiesOf, y as themeVocabularyFor, z as mtimeOf } from "./similar.js";
 import { createRequire } from "node:module";
 import * as fs from "node:fs";
 import { readFileSync } from "node:fs";
@@ -474,9 +474,10 @@ const arbitraryValueRegex = /^\[(?:(\w[\w-]*):)?(.+)\]$/i;
 const arbitraryVariableRegex = /^\((?:(\w[\w-]*):)?(.+)\)$/i;
 const fractionRegex = /^\d+(?:\.\d+)?\/\d+(?:\.\d+)?$/;
 const tshirtUnitRegex = /^(\d+(\.\d+)?)?(xs|sm|md|lg|xl)$/;
-const lengthUnitRegex = /\d+(%|px|r?em|[sdl]?v([hwib]|min|max)|pt|pc|in|cm|mm|cap|ch|ex|r?lh|cq(w|h|i|b|min|max))|\b(calc|min|max|clamp)\(.+\)|^0$/;
+const lengthUnitRegex = /\d(%|px|r?em|[sdl]?v([hwib]|min|max)|pt|pc|in|cm|mm|cap|ch|ex|r?lh|cq(w|h|i|b|min|max))|^0$/;
+const lengthFunctionRegex = /\b(calc|min|max|clamp)\(/;
 const colorFunctionRegex = /^(rgba?|hsla?|hwb|(ok)?(lab|lch)|color-mix)\(.+\)$/;
-const shadowRegex = /^(inset_)?-?((\d+)?\.?(\d+)[a-z]+|0)_-?((\d+)?\.?(\d+)[a-z]+|0)/;
+const shadowRegex = /^(inset_)?-?((\d*\.)?\d+[a-z]+|0)_-?((\d*\.)?\d+[a-z]+|0)/;
 const imageRegex = /^(url|image|image-set|cross-fade|element|(repeating-)?(linear|radial|conic)-gradient)\(.+\)$/;
 const isFraction = (v) => fractionRegex.test(v);
 const isNumber = (v) => !!v && !Number.isNaN(Number(v));
@@ -484,7 +485,11 @@ const isInteger = (v) => !!v && Number.isInteger(Number(v));
 const isPercent = (v) => v.endsWith("%") && isNumber(v.slice(0, -1));
 const isTshirtSize = (v) => tshirtUnitRegex.test(v);
 const isAny = () => true;
-const isLengthOnly = (v) => lengthUnitRegex.test(v) && !colorFunctionRegex.test(v);
+const isLengthFunction = (v) => {
+	const match = lengthFunctionRegex.exec(v);
+	return !!match && v.includes(")", match.index + match[0].length + 1);
+};
+const isLengthOnly = (v) => (lengthUnitRegex.test(v) || isLengthFunction(v)) && !colorFunctionRegex.test(v);
 const isNever = () => false;
 const isShadow = (v) => shadowRegex.test(v);
 const isImage = (v) => imageRegex.test(v);
@@ -780,8 +785,8 @@ function classifierFor(fromFile) {
 //#region src/tailwind/client.ts
 let bridge = null;
 let restarts = 0;
-const FIRST_TIMEOUT = 15e3;
-const TIMEOUT = 5e3;
+const FIRST_TIMEOUT = 6e4;
+const TIMEOUT = 3e4;
 const RETRY_AFTER = 5e3;
 const REFRESH_AFTER = 1e3;
 function workerFile() {
@@ -801,8 +806,8 @@ function transportFailed(reason) {
 	stop();
 	if (restarts++ >= 1) {
 		bridge = false;
-		warnOnce("tailwind:off", `The Tailwind worker failed twice (${reason}); no-unknown-classes is using the grammar bundled with @shadcn/lint for the rest of this run.`);
-	}
+		warnOnce("tailwind:off", `The Tailwind worker failed twice (${reason}); the Tailwind build is unavailable, so rules use the grammar bundled with @shadcn/lint for the rest of this run.`);
+	} else warnOnce(`tailwind:restart:${reason}`, `The Tailwind worker failed (${reason}) and is restarting; the Tailwind build was unavailable, so rules checked the current file with the grammar bundled with @shadcn/lint and may report project classes as unknown.`);
 	return null;
 }
 function start() {
@@ -839,8 +844,10 @@ function start() {
 		return transportFailed(error.message);
 	}
 }
-function timeoutFor(live) {
-	return live.cold ? FIRST_TIMEOUT : TIMEOUT;
+function timeoutFor(cold) {
+	const override = Number(process.env.SHADCN_LINT_TAILWIND_TIMEOUT);
+	if (Number.isFinite(override) && override > 0) return override;
+	return cold ? FIRST_TIMEOUT : TIMEOUT;
 }
 function ask(cssFile, candidates) {
 	const live = start();
@@ -854,9 +861,10 @@ function ask(cssFile, candidates) {
 		candidates,
 		shared
 	});
-	const waited = Atomics.wait(flag, 0, 0, timeoutFor(live));
+	const timeout = timeoutFor(live.cold);
+	const waited = Atomics.wait(flag, 0, 0, timeout);
 	live.cold = false;
-	if (waited === "timed-out") return transportFailed("timed out");
+	if (waited === "timed-out") return transportFailed(`timed out after ${timeout / 1e3} s`);
 	const received = receiveMessageOnPort(live.port);
 	if (!received || received.message.id !== id) return transportFailed("out-of-order answer");
 	restarts = 0;
@@ -1125,26 +1133,30 @@ function importNameOf(imported, root, property) {
 		source: imported.source,
 		exportName: imported.namespace ? property ?? "" : imported.original,
 		name: imported.namespace ? joined : `${imported.original === "default" ? root : imported.original}${suffix}`,
-		suffix
+		suffix,
+		member: imported.namespace || property === null || imported.original === "default" ? null : `${imported.original}.${property}`
 	};
 }
-function componentFromImport(index, binding, importedName, patterns) {
-	if (binding && index.owns(binding.file)) {
-		const component = `${binding.name}${importedName.suffix}`;
+function componentFromImport(index, binding, importedName, patterns, member = null, ui = []) {
+	const owned = member ?? binding;
+	if (owned && index.owns(owned.file)) {
+		const component = `${owned.name}${member ? "" : importedName.suffix}`;
 		const indexed = index.files.get(component);
-		if (!NODE_MODULES.test(binding.file) || indexed) {
-			const file = indexed ?? binding.file;
-			return {
-				component,
-				file: NODE_MODULES.test(file) ? null : file
-			};
-		}
+		const packaged = NODE_MODULES.test(owned.file);
+		if (!packaged || indexed && realpath(indexed) === realpath(owned.file)) return {
+			component,
+			file: packaged ? null : indexed ?? owned.file
+		};
 	}
+	if (member && NODE_MODULES.test(member.file) && ui.some((prefix) => isUnder(importedName.source, prefix))) return null;
 	if (patterns.some((pattern) => pattern.test(importedName.source))) return {
 		component: binding && isSfc(binding.file) ? `${binding.name}${importedName.suffix}` : importedName.name,
 		file: binding?.file ?? null
 	};
 	return null;
+}
+function isUnder(source, prefix) {
+	return source === prefix || source.startsWith(`${prefix}/`);
 }
 
 //#endregion
@@ -1152,18 +1164,18 @@ function componentFromImport(index, binding, importedName, patterns) {
 const parsed = /* @__PURE__ */ new Map();
 const DECLARATION_RE = /export\s+(?:default\s+)?(?:async\s+)?(?:function\*?|const|let|var|class|enum)\s+([A-Za-z_$][\w$]*)/g;
 const DEFAULT_DECLARATION_RE = /export\s+default\s+(?:async\s+)?(?:function\*?|class)\s+([A-Za-z_$][\w$]*)/;
-const DEFAULT_IDENTIFIER_RE = /export\s+default\s+([A-Za-z_$][\w$]*)\s*;?\s*$/m;
+const DEFAULT_IDENTIFIER_RE = /export\s+default\s+([A-Za-z_$][\w$]*)\s*(?:;\s*)?$/m;
 const DEFAULT_WRAPPED_RE = /export\s+default\s+(?:React\.)?(?:memo|forwardRef)\(\s*(?:function\s+)?([A-Za-z_$][\w$]*)/;
-const NAMED_RE = /export\s*(type\s+)?\{([^}]*)\}\s*(?:from\s*["']([^"']+)["'])?/g;
+const NAMED_RE = /export\s*(type\s+)?\{([^{}]*)\}\s*(?:from\s*["']([^"']+)["'])?/g;
 const STAR_RE = /export\s*\*\s*(?:as\s+([\w$]+)\s+)?from\s*["']([^"']+)["']/g;
-const IMPORT_RE = /import\s+(?!type\s)(?:([\w$]+)\s*,?\s*)?(?:\*\s*as\s+([\w$]+)|\{([^}]*)\})?\s*from\s*["']([^"']+)["']/g;
+const IMPORT_RE = /import\s+(?!type\s)(?:([\w$]+)\s*(?:,\s*)?)?(?:(?:\*\s*as\s+([\w$]+)|\{([^{}]*)\})\s*)?from\s*["']([^"']+)["']/g;
 const COMMENT_RE = /\/\*[\s\S]*?\*\/|\/\/[^\n\r]*/g;
 function parseNamed(list) {
 	const out = [];
 	for (const raw of list.replace(COMMENT_RE, "").split(",")) {
 		const item = raw.trim();
 		if (!item || item.startsWith("type ")) continue;
-		const [local, exported] = item.split(/\s+as\s+/).map((s) => s.trim());
+		const [local, exported] = item.split(/(?<!\s)\s+as\s+/).map((s) => s.trim());
 		if (!local) continue;
 		out.push({
 			exported: exported ?? local,
@@ -1171,6 +1183,55 @@ function parseNamed(list) {
 		});
 	}
 	return out;
+}
+const BLOCK_END_RE = /\*\//g;
+const LINE_END_RE = /[\n\r]/g;
+const FROM_RE = /\s*(?:from\s*["']([^"']+)["'])?/y;
+function listCloser(source) {
+	const offsets = /* @__PURE__ */ new Map();
+	const next = (re, from) => {
+		let found = offsets.get(re);
+		if (!found) {
+			found = Array.from(source.matchAll(re), (match) => match.index);
+			offsets.set(re, found);
+		}
+		let low = 0;
+		let high = found.length;
+		while (low < high) {
+			const mid = low + high >> 1;
+			if (found[mid] < from) low = mid + 1;
+			else high = mid;
+		}
+		return found[low] ?? -1;
+	};
+	const resumed = /* @__PURE__ */ new Map();
+	return (open) => {
+		const pending = [];
+		let close = -1;
+		for (let i = open + 1; i < source.length; i++) {
+			const char = source[i];
+			if (char === "}") {
+				close = i;
+				break;
+			}
+			if (char === "{") break;
+			const after = source[i + 1];
+			if (char !== "/" || after !== "*" && after !== "/") continue;
+			const block = after === "*";
+			const at = next(block ? BLOCK_END_RE : LINE_END_RE, i + 2);
+			if (at < 0) break;
+			const end = at + (block ? 2 : 1);
+			const known = resumed.get(end);
+			if (known !== void 0) {
+				close = known;
+				break;
+			}
+			pending.push(end);
+			i = end - 1;
+		}
+		for (const end of pending) resumed.set(end, close);
+		return close;
+	};
 }
 function parseModule(file) {
 	const module = {
@@ -1214,10 +1275,24 @@ function parseModule(file) {
 		module.local.add(defaultIdentifier[1]);
 	}
 	if (module.sfc) module.defaultName = sfcNameOf(file);
+	const closeOf = listCloser(source);
+	let consumed = 0;
 	for (const match of source.matchAll(NAMED_RE)) {
+		if (match.index < consumed) continue;
+		let list = match[2];
+		let spec = match[3] ?? "";
+		if (list.includes("/")) {
+			const open = source.indexOf("{", match.index);
+			const close = closeOf(open);
+			if (close > open + 1 + list.length) {
+				list = source.slice(open + 1, close);
+				FROM_RE.lastIndex = close + 1;
+				spec = FROM_RE.exec(source)?.[1] ?? "";
+				consumed = FROM_RE.lastIndex;
+			}
+		}
 		if (match[1]) continue;
-		const spec = match[3] ?? "";
-		for (const { exported, local } of parseNamed(match[2])) module.named.push({
+		for (const { exported, local } of parseNamed(list)) module.named.push({
 			exported,
 			local,
 			spec
@@ -1276,6 +1351,20 @@ function exportsOf(file, visiting = /* @__PURE__ */ new Set(), deps) {
 	return cached.value;
 }
 function collectExports(file, visiting, deps) {
+	const walks = [walkExports(file, visiting, deps)];
+	let inner = /* @__PURE__ */ new Map();
+	for (;;) {
+		const step = walks[walks.length - 1].next(inner);
+		if (!step.done) {
+			walks.push(walkExports(step.value, visiting, deps));
+			continue;
+		}
+		walks.pop();
+		inner = step.value;
+		if (!walks.length) return inner;
+	}
+}
+function* walkExports(file, visiting, deps) {
 	const exports = /* @__PURE__ */ new Map();
 	if (visiting.has(file)) return exports;
 	deps?.add(file);
@@ -1293,7 +1382,7 @@ function collectExports(file, visiting, deps) {
 	else if (module.defaultName) {
 		const imported = module.imports.get(module.defaultName);
 		const target = imported && imported.name !== "*" ? resolveFrom(file, imported.spec) : null;
-		const inner = target ? exportsOf(target, visiting, deps) : null;
+		const inner = target ? yield target : null;
 		exports.set("default", inner?.get(imported.name) ?? (target ? {
 			file: target,
 			name: imported.name
@@ -1307,7 +1396,7 @@ function collectExports(file, visiting, deps) {
 			const imported = module.imports.get(local);
 			if (imported && imported.name !== "*") {
 				const target = resolveFrom(file, imported.spec);
-				const inner = target ? exportsOf(target, visiting, deps) : null;
+				const inner = target ? yield target : null;
 				exports.set(exported, inner?.get(imported.name) ?? (target ? {
 					file: target,
 					name: imported.name
@@ -1336,7 +1425,7 @@ function collectExports(file, visiting, deps) {
 		}
 		const target = resolveFrom(file, spec);
 		if (!target) continue;
-		const inner = exportsOf(target, visiting, deps);
+		const inner = yield target;
 		exports.set(exported, inner.get(local) ?? {
 			file: target,
 			name: local
@@ -1352,7 +1441,7 @@ function collectExports(file, visiting, deps) {
 	for (const spec of module.stars) {
 		const target = resolveFrom(file, spec);
 		if (!target) continue;
-		for (const [name, binding] of exportsOf(target, visiting, deps)) if (name !== "default" && !exports.has(name)) exports.set(name, binding);
+		for (const [name, binding] of yield target) if (name !== "default" && !exports.has(name)) exports.set(name, binding);
 	}
 	visiting.delete(file);
 	return exports;
@@ -1478,6 +1567,9 @@ function definingExportOf(spec, name, fromFile, deps) {
 		file: target,
 		name
 	};
+}
+function importOf(file, local) {
+	return moduleOf(file)?.imports.get(local) ?? null;
 }
 
 //#endregion
@@ -1799,7 +1891,7 @@ const NO_FORWARDS = {
 	props: /* @__PURE__ */ new Map(),
 	spread: null
 };
-const CLASS_PROP = /^[^:]*class(name)?s?$/i;
+const CLASS_PROP = /^(?!data-|aria-)[^:]*class(name)?s?$/i;
 const MAIN_CLASS_PROP = /^(class|className|class:list)$/;
 function wrapperPropOf(attribute) {
 	if (MAIN_CLASS_PROP.test(attribute)) return "className";
@@ -2007,8 +2099,8 @@ function build(file, patterns, ui, visiting, deps, parsedAst) {
 			});
 		}
 	}
-	const index = componentsFor(file);
-	const tagIndex = ui.length ? componentsFor(file, ui) : index;
+	const index = componentsFor(file, ui);
+	const unresolvedIndex = ui.length ? componentsFor(file) : index;
 	const { bindings, candidates } = indexLocalBindings(ast);
 	const declaring = /* @__PURE__ */ new Set();
 	const asking = /* @__PURE__ */ new Set();
@@ -2026,9 +2118,9 @@ function build(file, patterns, ui, visiting, deps, parsedAst) {
 		const imported = imports.get(name.root);
 		if (!imported) {
 			if (name.property !== null) return null;
-			if (tagIndex.has(name.root)) return { target: {
+			if (index.has(name.root)) return { target: {
 				component: name.root,
-				file: tagIndex.files.get(name.root) ?? null
+				file: index.files.get(name.root) ?? null
 			} };
 			return candidates.has(name.root) ? {
 				file,
@@ -2037,13 +2129,14 @@ function build(file, patterns, ui, visiting, deps, parsedAst) {
 		}
 		const importedName = importNameOf(imported, name.root, name.property);
 		const binding = importedName.exportName ? definingExportOf(importedName.source, importedName.exportName, file, deps) : null;
-		const component = componentFromImport(index, binding, importedName, patterns);
+		const member = importedName.member ? definingExportOf(importedName.source, importedName.member, file, deps) : null;
+		const component = componentFromImport(index, binding, importedName, patterns, member, ui);
 		if (component) return { target: component };
 		if (!binding) {
 			complete = false;
-			return index.has(importedName.name) ? { target: {
+			return unresolvedIndex.has(importedName.name) ? { target: {
 				component: importedName.name,
-				file: index.files.get(importedName.name) ?? null
+				file: unresolvedIndex.files.get(importedName.name) ?? null
 			} } : null;
 		}
 		if (binding.file === file || NODE_MODULES.test(binding.file)) return null;
@@ -2220,6 +2313,78 @@ function lookup(file, exportName, prop, patterns, ui, visiting, deps, parsedAst)
 }
 function wrapperTargetOf(file, exportName, patterns = [], parsedAst, ui = [], prop = "className") {
 	return lookup(file, exportName, prop, patterns, ui, /* @__PURE__ */ new Set(), void 0, parsedAst).target;
+}
+function addsNoClasses(file, component) {
+	if (NODE_MODULES.test(file) || isSfc(file)) return false;
+	const mtime = mtimeOf(file);
+	if (mtime === null) return false;
+	let entry = classless.get(file);
+	if (!entry || entry.mtime !== mtime) {
+		entry = {
+			mtime,
+			components: classlessComponentsOf(file)
+		};
+		classless.set(file, entry);
+	}
+	return entry.components.has(component);
+}
+const classless = /* @__PURE__ */ new Map();
+function classlessComponentsOf(file) {
+	const out = /* @__PURE__ */ new Set();
+	let ast;
+	try {
+		ast = parseSource(fs.readFileSync(file, "utf-8"), file);
+	} catch {
+		return out;
+	}
+	const { bindings, candidates } = indexLocalBindings(ast);
+	for (const name of candidates) if (provesClassless(ast, bindings, name)) out.add(name);
+	return out;
+}
+const BASE_UI = /^@base-ui\/react(\/[^/]+)?$/;
+const STATIC_DATA_ATTRIBUTE = /^data-[\w-]+$/;
+function provesClassless(ast, bindings, component) {
+	const fn = componentFunction(bindings, component);
+	if (!fn || bindings.get(component) !== fn || fn.async || fn.generator) return false;
+	const param = fn.params?.[0];
+	if (fn.params.length !== 1) return false;
+	const { named, carriers } = propBindings(fn);
+	if (named.size || carriers.size !== 1) return false;
+	if (param.type === "ObjectPattern" && param.properties.some((prop) => prop.type !== "RestElement")) return false;
+	if (param.type !== "ObjectPattern" && param.type !== "Identifier") return false;
+	const [props] = carriers;
+	let body = fn.body;
+	if (body?.type === "BlockStatement") {
+		if (body.body.length !== 1 || body.body[0].type !== "ReturnStatement") return false;
+		body = body.body[0].argument;
+	}
+	while (body?.type === "ParenthesizedExpression") body = body.expression;
+	if (body?.type !== "JSXElement" || !body.openingElement?.selfClosing || body.children?.length) return false;
+	const name = jsxElementNameOf(body.openingElement.name);
+	if (!name?.root || (name.property ?? "").includes(".")) return false;
+	if (name.root === props || name.root === fn.id?.name) return false;
+	if (!importsFromBaseUi(ast, name.root)) return false;
+	let spreads = 0;
+	for (const attr of body.openingElement.attributes ?? []) {
+		if (attr.type === "JSXSpreadAttribute") {
+			if (attr.argument?.type !== "Identifier" || attr.argument.name !== props) return false;
+			spreads++;
+			continue;
+		}
+		if (attr.type !== "JSXAttribute" || attr.name?.type !== "JSXIdentifier" || !STATIC_DATA_ATTRIBUTE.test(attr.name.name) || attr.value?.type !== "Literal" || typeof attr.value.value !== "string") return false;
+	}
+	return spreads === 1;
+}
+function importsFromBaseUi(ast, local) {
+	for (const statement of ast.body) {
+		if (statement.type !== "ImportDeclaration") continue;
+		if (statement.importKind === "type") continue;
+		for (const spec of statement.specifiers ?? []) {
+			if (spec.local?.name !== local) continue;
+			return spec.importKind !== "type" && typeof statement.source?.value === "string" && BASE_UI.test(statement.source.value);
+		}
+	}
+	return false;
 }
 
 //#endregion
@@ -2669,7 +2834,7 @@ const DEFAULT_MERGE_FUNCTIONS = [
 	"classNames"
 ];
 const DEFAULT_VARIANT_FUNCTIONS = ["cva", "tv"];
-const CLASS_ATTRIBUTE = /^(class:list|[^:]*class(name)?s?)$/i;
+const CLASS_ATTRIBUTE = /^(class:list|(?!data-|aria-)[^:]*class(name)?s?)$/i;
 function isClassAttribute(name) {
 	return CLASS_ATTRIBUTE.test(name);
 }
@@ -2685,8 +2850,8 @@ function regexpOf(pattern) {
 function createComponentTracker(context, options = {}) {
 	const filename = fileOf(context);
 	const ui = options.ui ?? [];
-	const index = componentsFor(filename);
-	const tagIndex = ui.length ? componentsFor(filename, ui) : index;
+	const index = componentsFor(filename, ui);
+	const unresolvedIndex = ui.length ? componentsFor(filename) : index;
 	const patterns = (options.componentImports ?? []).map(regexpOf);
 	const ignored = (options.ignoreImports ?? []).map(regexpOf);
 	const imports = /* @__PURE__ */ new Map();
@@ -2724,7 +2889,8 @@ function createComponentTracker(context, options = {}) {
 			if (imported.namespace && property === null) importedName.name = root;
 			const { exportName, name } = importedName;
 			const binding = exportName ? bindingOf(root, exportName) : null;
-			const component = componentFromImport(index, binding, importedName, patterns);
+			const member = importedName.member ? bindingOf(root, importedName.member) : null;
+			const component = componentFromImport(index, binding, importedName, patterns, member, ui);
 			if (component) return {
 				...component,
 				wrapper: null
@@ -2741,17 +2907,17 @@ function createComponentTracker(context, options = {}) {
 					wrapper
 				};
 			}
-			if (index.has(name) || index.has(imported.original)) return {
+			if (unresolvedIndex.has(name) || unresolvedIndex.has(imported.original)) return {
 				component: name,
-				file: index.files.get(name) ?? index.files.get(imported.original) ?? null,
+				file: unresolvedIndex.files.get(name) ?? unresolvedIndex.files.get(imported.original) ?? null,
 				wrapper: null
 			};
 			return null;
 		}
-		const name = property === null ? !tagIndex.has(root) && element.alias && tagIndex.has(element.alias) ? element.alias : root : `${root}${property.replace(/\./g, "")}`;
-		if (tagIndex.has(name)) return {
+		const name = property === null ? !index.has(root) && element.alias && index.has(element.alias) ? element.alias : root : `${root}${property.replace(/\./g, "")}`;
+		if (index.has(name)) return {
 			component: name,
-			file: tagIndex.files.get(name) ?? null,
+			file: index.files.get(name) ?? null,
 			wrapper: null
 		};
 		if (property !== null) return null;
@@ -2908,7 +3074,20 @@ function derivedValueOf(init) {
 	if (call?.type !== "CallExpression" || call.callee?.type !== "Identifier" || call.callee.name !== "$derived" || call.arguments?.length !== 1 || call.arguments[0].type === "SpreadElement") return init;
 	return call.arguments[0];
 }
+const MAX_ROUTE = 64;
+var Route = class extends Set {
+	stops = 0;
+	has(value) {
+		const found = super.has(value);
+		if (found) this.stops++;
+		return found;
+	}
+};
 function resolveIdentifier(node, context, path) {
+	if (path.size >= MAX_ROUTE) {
+		if (path instanceof Route) path.stops++;
+		return null;
+	}
 	const variable = variableOf(node, context);
 	if (!variable || path.has(variable)) return null;
 	const def = variable.defs?.[0];
@@ -3108,15 +3287,42 @@ function collectClassStrings(expression, context, options = {}) {
 	const contextualStrings = [];
 	const vocabularyStrings = [];
 	const unresolved = [];
-	const path = /* @__PURE__ */ new Set();
+	const path = new Route();
 	let resolvedCalls = 0;
+	const contextualNodes = /* @__PURE__ */ new Set();
+	const vocabularyNodes = /* @__PURE__ */ new Set();
+	const unresolvedNodes = /* @__PURE__ */ new Set();
+	const readBindings = /* @__PURE__ */ new Map();
 	const push = (value, node) => {
 		const string = {
 			value,
 			node
 		};
-		contextualStrings.push(string);
-		if (resolvedCalls === 0) vocabularyStrings.push(string);
+		if (!contextualNodes.has(node)) {
+			contextualNodes.add(node);
+			contextualStrings.push(string);
+		}
+		if (resolvedCalls === 0 && !vocabularyNodes.has(node)) {
+			vocabularyNodes.add(node);
+			vocabularyStrings.push(string);
+		}
+	};
+	const unread = (node) => {
+		if (unresolvedNodes.has(node)) return;
+		unresolvedNodes.add(node);
+		unresolved.push(node);
+	};
+	const readBinding = (variable, steps, valuesMode, read) => {
+		const key = `${valuesMode}:${resolvedCalls > 0}:${JSON.stringify(steps)}`;
+		let keys = readBindings.get(variable);
+		if (keys?.has(key)) return;
+		const stops = path.stops;
+		path.add(variable);
+		read();
+		path.delete(variable);
+		if (path.stops !== stops) return;
+		if (!keys) readBindings.set(variable, keys = /* @__PURE__ */ new Set());
+		keys.add(key);
 	};
 	const visitThrough = (node, steps, valuesMode) => {
 		if (!steps.length) {
@@ -3136,25 +3342,24 @@ function collectClassStrings(expression, context, options = {}) {
 			case "Identifier": {
 				const resolved = resolve ? resolveIdentifier(value, context, path) : null;
 				if (!resolved) {
-					unresolved.push(value);
+					unread(value);
 					return;
 				}
-				path.add(resolved.variable);
-				visitThrough(resolved.init, [...resolved.steps, ...steps], valuesMode);
-				path.delete(resolved.variable);
+				const route = [...resolved.steps, ...steps];
+				readBinding(resolved.variable, route, valuesMode, () => visitThrough(resolved.init, route, valuesMode));
 				return;
 			}
 			case "ArrayExpression":
 			case "ObjectExpression": {
 				const projected = projectStatic(value, steps);
 				if (projected.steps.length === steps.length) {
-					unresolved.push(value);
+					unread(value);
 					return;
 				}
 				visitThrough(projected.init, projected.steps, valuesMode);
 				return;
 			}
-			default: unresolved.push(node);
+			default: unread(node);
 		}
 	};
 	const visit = (node, valuesMode) => {
@@ -3163,7 +3368,7 @@ function collectClassStrings(expression, context, options = {}) {
 		if (forwarded) {
 			if (path.has(forwarded.variable)) return;
 			path.add(forwarded.variable);
-			for (const alternative of forwarded.alternatives) if ("unresolved" in alternative) unresolved.push(alternative.unresolved);
+			for (const alternative of forwarded.alternatives) if ("unresolved" in alternative) unread(alternative.unresolved);
 			else visit(alternative.value, valuesMode);
 			path.delete(forwarded.variable);
 			return;
@@ -3178,15 +3383,14 @@ function collectClassStrings(expression, context, options = {}) {
 				node.quasis.forEach((quasi, i) => {
 					let text = quasi.value?.cooked ?? "";
 					if (i > 0 && !/^\s/.test(text)) text = text.replace(/^\S+/, "");
-					if (i < node.expressions.length && !/\s$/.test(text)) text = text.replace(/\S+$/, "");
+					if (i < node.expressions.length && !/\s$/.test(text)) text = text.replace(/(?<!\S)\S+$/, "");
 					if (text.trim()) push(text, quasi);
 				});
 				node.expressions.forEach((expr, i) => {
 					const before = node.quasis[i]?.value?.cooked ?? "";
 					const after = node.quasis[i + 1]?.value?.cooked ?? "";
-					if (before !== "" && !/\s$/.test(before) || after !== "" && !/^\s/.test(after)) {
-						if (!unresolved.includes(node)) unresolved.push(node);
-					} else visit(expr, valuesMode);
+					if (before !== "" && !/\s$/.test(before) || after !== "" && !/^\s/.test(after)) unread(node);
+					else visit(expr, valuesMode);
 				});
 				return;
 			case "ConditionalExpression":
@@ -3205,12 +3409,12 @@ function collectClassStrings(expression, context, options = {}) {
 					for (const arg of node.arguments) visit(arg, valuesMode);
 					return;
 				}
-				unresolved.push(node);
+				unread(node);
 				return;
 			case "ObjectExpression":
 				for (const entry of objectEntries(node, context, path)) if ("unknown" in entry) {
 					if (valuesMode && entry.unknown.type === "Property") visit(entry.unknown.value, valuesMode);
-					else unresolved.push(entry.unknown);
+					else unread(entry.unknown);
 				} else if (valuesMode) visit(entry.value, valuesMode);
 				else push(entry.key, keyNodeOf(node, entry));
 				return;
@@ -3225,25 +3429,24 @@ function collectClassStrings(expression, context, options = {}) {
 					if (hopped) resolvedCalls--;
 					return;
 				}
-				unresolved.push(node);
+				if (resolve && visitVariantCall(node, valuesMode)) return;
+				unread(node);
 				return;
 			}
 			case "Identifier": {
 				if (node.name === "undefined") return;
 				const resolved = resolve ? resolveIdentifier(node, context, path) : null;
 				if (!resolved) {
-					unresolved.push(node);
+					unread(node);
 					return;
 				}
-				path.add(resolved.variable);
-				visitThrough(resolved.init, resolved.steps, valuesMode);
-				path.delete(resolved.variable);
+				readBinding(resolved.variable, resolved.steps, valuesMode, () => visitThrough(resolved.init, resolved.steps, valuesMode));
 				return;
 			}
 			case "MemberExpression": {
 				const found = resolveMemberValue(node, context, path);
 				if (!found.key || "unresolved" in found) {
-					unresolved.push(node);
+					unread(node);
 					return;
 				}
 				if (found.variable) path.add(found.variable);
@@ -3261,8 +3464,41 @@ function collectClassStrings(expression, context, options = {}) {
 			case "TSSatisfiesExpression":
 				visit(node.expression, valuesMode);
 				return;
-			default: unresolved.push(node);
+			default: unread(node);
 		}
+	};
+	const visitVariantCall = (node, valuesMode) => {
+		if (node.callee?.type !== "Identifier") return false;
+		const resolved = resolveIdentifier(node.callee, context, path);
+		if (!resolved || resolved.steps.length) return false;
+		const init = unwrapTs(resolved.init);
+		if (init?.type !== "CallExpression") return false;
+		const callee = dottedName(init.callee);
+		if (!callee || !valueHelpers.has(callee)) return false;
+		if (init.arguments.some((arg) => {
+			const config = resolveObject(arg, context, path);
+			if (!config) return false;
+			const slots = resolveProperty(config, "slots", context, path);
+			return slots.value !== void 0 || slots.uncertain;
+		})) return false;
+		readBinding(resolved.variable, [], valuesMode, () => visit(init, valuesMode));
+		for (const arg of node.arguments) {
+			const props = unwrapTs(arg);
+			if (props?.type !== "ObjectExpression") {
+				unread(arg);
+				continue;
+			}
+			for (const prop of props.properties) {
+				if (prop.type !== "Property") {
+					unread(prop);
+					continue;
+				}
+				const key = keyName$1(prop);
+				if (key === null) unread(prop);
+				else if (key === "class" || key === "className") visit(prop.value, false);
+			}
+		}
+		return true;
 	};
 	const visitVariantConfig = (node) => {
 		if (!node) return;
@@ -3272,7 +3508,7 @@ function collectClassStrings(expression, context, options = {}) {
 		}
 		for (const prop of node.properties) {
 			if (prop.type !== "Property") {
-				unresolved.push(prop);
+				unread(prop);
 				continue;
 			}
 			switch (keyName$1(prop)) {
@@ -3423,7 +3659,10 @@ function classSiteVisitors(context, options, onSite) {
 		const own = tracker.resolveName(reader.nameOf(element), attribute);
 		if (own) return own;
 		const owner = reader.parentElementOf(element);
-		return owner && reader.renderedElementOf?.(owner) === element ? tracker.resolveName(reader.nameOf(owner), attribute) : null;
+		if (!owner || reader.renderedElementOf?.(owner) !== element) return null;
+		const judge = tracker.resolveName(reader.nameOf(owner), attribute);
+		if (judge?.file && !judge.wrapper && reader.nameOf(element)?.component === false && addsNoClasses(judge.file, judge.component)) return null;
+		return judge;
 	};
 	const enclosingOf = (element, accepts) => {
 		let direct = true;
@@ -3666,6 +3905,8 @@ function checkEntries(entries, groupIds, classifier, fromFile) {
 		if (classifier.groupOf(entry)) continue;
 		const known = fromFile ? knownClassesFor(fromFile) : null;
 		if (known?.utilities.has(entry) || known?.classes.has(entry)) continue;
+		const entryFile = fromFile ? tailwindEntryFor(fromFile) : null;
+		if (entryFile && unknownClasses(entryFile, [entry])?.length === 0) continue;
 		const hint = /^[A-Za-z][A-Za-z0-9]*$/.test(entry) ? didYouMean(entry, [
 			...CATEGORIES,
 			"layout",
@@ -3996,12 +4237,15 @@ const SPACING_GROUPS = /* @__PURE__ */ new Set([
 	"scroll-pl"
 ]);
 function splitArbitrary(token) {
-	const match = normalizeClass(token).match(/^(.+?)-\[([^\]]*)\](.*)$/);
-	return match ? {
-		utility: match[1],
-		inner: match[2],
-		suffix: match[3]
-	} : null;
+	const base = normalizeClass(token);
+	const open = base.indexOf("-[", 1);
+	const close = open === -1 ? -1 : base.indexOf("]", open + 2);
+	if (close === -1) return null;
+	return {
+		utility: base.slice(0, open),
+		inner: base.slice(open + 2, close),
+		suffix: base.slice(close + 1)
+	};
 }
 function scaleEquivalent(token, unitPx = 4) {
 	if (unitPx === null) return null;
@@ -5102,17 +5346,25 @@ function fileVariantsOf(file) {
 function variantDefinitionsOf(file) {
 	return fileVariantsOf(file)?.definitions ?? [];
 }
+function barrelDefinitionFor(file, expected) {
+	const barrel = isSfc(file) ? barrelOf(path.dirname(file)) : null;
+	if (!barrel) return null;
+	if (![...exportsOf(barrel).values()].some((binding) => binding.file === file)) return null;
+	return variantDefinitionsOf(barrel).find((d) => d.name === expected) ?? null;
+}
+function importedDefinitionFor(file, expected) {
+	const imported = importOf(file, expected);
+	if (!imported) return null;
+	const binding = definingExportOf(imported.spec, imported.name, file);
+	if (!binding || NODE_MODULES.test(binding.file)) return null;
+	return variantDefinitionsOf(binding.file).find((d) => d.name === binding.name && d.source === "factory") ?? null;
+}
 function definitionFor(file, component) {
 	const expected = component.charAt(0).toLowerCase() + component.slice(1) + "Variants";
 	const read = fileVariantsOf(file);
 	const definitions = read?.definitions ?? [];
-	if (!definitions.length) {
-		const barrel = isSfc(file) ? barrelOf(path.dirname(file)) : null;
-		if (!barrel) return null;
-		if (![...exportsOf(barrel).values()].some((binding) => binding.file === file)) return null;
-		return variantDefinitionsOf(barrel).find((d) => d.name === expected) ?? null;
-	}
-	return definitions.find((d) => d.name === expected) ?? definitions.find((d) => d.name === component && d.source === "props") ?? definitions.find((d) => d.source === "factory" && (isSfc(file) || !!d.name && !!read?.uses.get(component)?.has(d.name))) ?? null;
+	if (!definitions.length) return barrelDefinitionFor(file, expected) ?? importedDefinitionFor(file, expected);
+	return definitions.find((d) => d.name === expected) ?? definitions.find((d) => d.name === component && d.source === "props") ?? importedDefinitionFor(file, expected) ?? definitions.find((d) => d.source === "factory" && (isSfc(file) || !!d.name && !!read?.uses.get(component)?.has(d.name))) ?? null;
 }
 function variantNamesFor(file, component) {
 	const values = definitionFor(file, component)?.axes.variant;
@@ -5247,7 +5499,7 @@ const noRestyle = {
 					messageId: site.wrapper ? sizes ? "spacingClassViaWrapperWithSizes" : "spacingClassViaWrapperNoSizes" : sizes ? "spacingClassWithSizes" : "spacingClassNoSizes",
 					data: {
 						...data,
-						around: aroundFor(site, contracts, component, token, filename)
+						around: aroundFor(site, contracts, component, token, filename, options.ui)
 					}
 				}, verdict.message);
 				else emit({
@@ -5262,14 +5514,14 @@ const noRestyle = {
 		});
 	}
 };
-function aroundFor(site, contracts, component, token, filename) {
+function aroundFor(site, contracts, component, token, filename, ui) {
 	const accepts = (name) => contracts.decide(name, token).kind === "ok";
 	const places = [];
 	if (contracts.decide(component, "m-4").kind === "ok") places.push("margin here");
 	const container = site.enclosingContainer(accepts);
 	if (!container?.direct) places.push(site.closedParent(accepts) ? "gap on a plain wrapper around it" : "gap on the parent");
 	if (container) places.push(`spacing on <${container.name}>`);
-	const primitives = contracts.primitivesFor(token, container ? [component, container.name] : [component], () => filename ? componentsFor(filename).files.keys() : []);
+	const primitives = contracts.primitivesFor(token, container ? [component, container.name] : [component], () => filename ? componentsFor(filename, ui).files.keys() : []);
 	if (primitives.length) places.push(listOf(primitives));
 	const last = places.pop();
 	if (!places.length) return last;

@@ -36,5 +36,5 @@
   "engines": {
     "node": ">=20.19"
   },
-  "version": "0.2.3-anti-slop.1"
+  "version": "0.2.5-anti-slop.1"
 }
