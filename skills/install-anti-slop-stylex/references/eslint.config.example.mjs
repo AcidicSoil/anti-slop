@@ -1,23 +1,29 @@
-// Fallback only: use if the installed Oxlint cannot execute both StyleX plugins.
-// Merge into an existing ESLint flat config; never run duplicate StyleX lint passes.
-// ESLint must use the project's existing JSX/TypeScript parser and file globs.
-// Keep shadcn in your existing Oxlint/ESLint setup when Tailwind is in use.
+// Use ESLint only when framework templates require it.
+// Merge with the consumer's existing JSX/TypeScript parser configuration.
 import stylex from "@stylexjs/eslint-plugin";
-import antiSlopStylex from "./tools/eslint/anti-slop-stylex/index.mjs";
+import designSystem from "eslint-plugin-stylex-design-system";
 
 export const stylexLint = {
   files: ["**/*.{js,jsx,ts,tsx}"],
-  plugins: { "@stylexjs": stylex, "anti-slop-stylex": antiSlopStylex },
+  plugins: { "@stylexjs": stylex, "stylex-ds": designSystem },
   rules: {
     "@stylexjs/valid-styles": "error",
     "@stylexjs/valid-shorthands": "error",
     "@stylexjs/no-conflicting-props": "error",
     "@stylexjs/no-lookahead-selectors": "error",
-    "anti-slop-stylex/prefer-design-tokens": ["error", {
-      // Replace with the actual theme module(s); do not accept arbitrary imports.
+    "stylex-ds/no-component-restyle": ["error", {
+      componentImports: ["@/components/ui"],
+      allow: ["layout"],
+    }],
+    "stylex-ds/require-color-tokens": ["error", {
       tokenModules: ["@/styles/tokens.stylex"],
-      // Use the same namespace in canonical CSS and Tailwind @theme aliases.
-      cssVariablePrefix: "--app-",
+    }],
+    "stylex-ds/require-scale-tokens": ["error", {
+      tokenModules: ["@/styles/tokens.stylex"],
+    }],
+    "stylex-ds/no-inline-styles": "error",
+    "stylex-ds/require-analyzable-styles": ["error", {
+      componentImports: ["@/components/ui"],
     }],
   },
 };

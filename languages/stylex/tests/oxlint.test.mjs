@@ -7,51 +7,46 @@ import { test } from "node:test";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const oxlint = join(root, "node_modules/.bin/oxlint");
-const tokenPlugin = fileURLToPath(new URL("../index.mjs", import.meta.url));
-const tokenOptions = {
-  tokenModules: ["@/styles/tokens.stylex"],
-  cssVariablePrefix: "--app-",
-};
+const tokenOptions = { tokenModules: ["@/styles/tokens.stylex"] };
 
-test("Oxlint consumer example registers native and anti-slop StyleX rules", () => {
-  const example = readFileSync(new URL("../oxlint.config.example.ts", import.meta.url), "utf8");
-  assert.match(example, /@stylexjs\/eslint-plugin/);
-  assert.match(example, /anti-slop-stylex\/prefer-design-tokens/);
-  assert.match(example, /no-conflicting-props/);
+test("Oxlint configuration enables all five policies and four official rules", () => {
+  const source = readFileSync(new URL("../oxlint.config.example.ts", import.meta.url), "utf8");
+  for (const name of ["no-component-restyle", "require-color-tokens", "require-scale-tokens", "no-inline-styles", "require-analyzable-styles"]) {
+    assert.ok(source.includes("stylex-design-system/" + name), name);
+  }
+  for (const name of ["valid-styles", "valid-shorthands", "no-conflicting-props", "no-lookahead-selectors"]) {
+    assert.ok(source.includes("@stylexjs/" + name), name);
+  }
+  assert.doesNotMatch(source, /cssVariablePrefix|prefer-design-tokens/);
 });
 
-test("Oxlint reports native StyleX and anti-slop token violations together", () => {
+test("Oxlint reports native and authoritative token violations together", () => {
   const directory = mkdtempSync(join(root, ".anti-slop-stylex-"));
   try {
     const config = join(directory, ".oxlintrc.json");
-    const filename = join(directory, "invalid.jsx");
     writeFileSync(config, JSON.stringify({
-      jsPlugins: [
-        "@stylexjs/eslint-plugin",
-        { name: "anti-slop-stylex", specifier: tokenPlugin },
-      ],
+      jsPlugins: ["@stylexjs/eslint-plugin", "eslint-plugin-stylex-design-system"],
       rules: {
         "@stylexjs/valid-styles": "error",
-        "anti-slop-stylex/prefer-design-tokens": ["error", tokenOptions],
+        "stylex-design-system/require-color-tokens": ["error", tokenOptions],
       },
     }));
-    writeFileSync(filename, 'import * as stylex from "@stylexjs/stylex"; export const styles = stylex.create({ root: { colorr: "red", color: "#f00" } });\n');
+    const source = join(directory, "invalid.jsx");
+    writeFileSync(source, 'import * as stylex from "@stylexjs/stylex"; export const s=stylex.create({root:{colorr:"red",color:"#f00",backgroundColor:"var(--app-surface)"}});\n');
 
-    const invalid = spawnSync(oxlint, ["--config", config, "--format", "json", filename], {
-      encoding: "utf8",
-      timeout: 30000,
+    const invalid = spawnSync(oxlint, ["--config", config, "--format", "json", source], {
+      encoding: "utf8", timeout: 30000,
     });
     assert.ifError(invalid.error);
     assert.equal(invalid.status, 1, invalid.stderr);
-    const violations = JSON.parse(invalid.stdout).diagnostics.map((item) => item.code);
-    assert.ok(violations.includes("@stylexjs(valid-styles)"), invalid.stdout);
-    assert.ok(violations.includes("anti-slop-stylex(prefer-design-tokens)"), invalid.stdout);
+    const codes = JSON.parse(invalid.stdout).diagnostics.map(({ code }) => code);
+    assert.ok(codes.includes("@stylexjs(valid-styles)"), invalid.stdout);
+    assert.equal(codes.filter((code) => code === "stylex-design-system(require-color-tokens)").length, 2, invalid.stdout);
 
     const valid = join(directory, "valid.jsx");
-    writeFileSync(valid, 'import * as stylex from "@stylexjs/stylex"; import { vars } from "@/styles/tokens.stylex"; export const styles = stylex.create({ root: { color: vars.primary, backgroundColor: "var(--app-surface)" } });\n');
+    writeFileSync(valid, 'import * as stylex from "@stylexjs/stylex"; import { colors } from "@/styles/tokens.stylex"; export const s=stylex.create({root:{color:colors.primary,backgroundColor:"transparent"}});\n');
     const clean = spawnSync(oxlint, ["--config", config, "--format", "json", valid], {
-      encoding: "utf8",
-      timeout: 30000,
+      encoding: "utf8", timeout: 30000,
     });
     assert.ifError(clean.error);
     assert.equal(clean.status, 0, clean.stdout + clean.stderr);

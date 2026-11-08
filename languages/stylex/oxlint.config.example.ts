@@ -1,22 +1,26 @@
-// Merge this into the consumer's existing Oxlint config; do not replace other plugins or rules.
-// Stackforge vendors the custom plugin at tools/eslint/anti-slop-stylex/.
+// Merge these StyleX rules into the consumer's existing Oxlint config.
 import { defineConfig } from "oxlint";
 
 export default defineConfig({
-  jsPlugins: [
-    "@stylexjs/eslint-plugin",
-    { name: "anti-slop-stylex", specifier: "./tools/eslint/anti-slop-stylex/index.mjs" },
-  ],
+  jsPlugins: ["@stylexjs/eslint-plugin", "eslint-plugin-stylex-design-system"],
   rules: {
     "@stylexjs/valid-styles": "error",
     "@stylexjs/valid-shorthands": "error",
     "@stylexjs/no-conflicting-props": "error",
     "@stylexjs/no-lookahead-selectors": "error",
-    "anti-slop-stylex/prefer-design-tokens": ["error", {
-      // Replace with the consumer's approved design-token module(s).
+    "stylex-design-system/no-component-restyle": ["error", {
+      componentImports: ["@/components/ui"],
+      allow: ["layout"],
+    }],
+    "stylex-design-system/require-color-tokens": ["error", {
       tokenModules: ["@/styles/tokens.stylex"],
-      // Match the canonical CSS and Tailwind @theme inline aliases.
-      cssVariablePrefix: "--app-",
+    }],
+    "stylex-design-system/require-scale-tokens": ["error", {
+      tokenModules: ["@/styles/tokens.stylex"],
+    }],
+    "stylex-design-system/no-inline-styles": "error",
+    "stylex-design-system/require-analyzable-styles": ["error", {
+      componentImports: ["@/components/ui"],
     }],
   },
 });

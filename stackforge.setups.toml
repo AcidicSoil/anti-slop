@@ -21,13 +21,14 @@ description = "Stage complete enhanced @shadcn/lint (six upstream and thirteen G
 "tools/oxlint/shadcn-lint" = "integrations/shadcn-lint/package"
 
 [setups.stylex]
-description = "Stage Oxlint-compatible StyleX validation and token rules; preserve existing lint configuration and styling systems."
+description = "Stage official StyleX checks and design-system enforcement without replacing the project's lint configuration."
 
 [setups.stylex.package_json.devDependencies]
 "@stylexjs/eslint-plugin" = "0.19.1"
+"eslint-plugin-stylex-design-system" = "file:tools/eslint/stylex-design-system"
 
 [setups.stylex.files]
-"tools/eslint/anti-slop-stylex" = "skills/install-anti-slop-stylex/assets/anti-slop-stylex"
+"tools/eslint/stylex-design-system" = "integrations/stylex-design-system/package"
 
 [setups.css]
 description = "Stage the anti-slop Stylelint plugin while preserving existing CSS tooling."

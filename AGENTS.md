@@ -1,7 +1,7 @@
 # Repository guidance
 
 - `src/` is the canonical TypeScript/JavaScript Oxlint implementation.
-- `languages/<language>/` is canonical for each additional language implementation.
+- `languages/<language>/` is canonical for additional language implementations, except StyleX's design-system rules, which are owned by `eslint-plugin-stylex-design-system` and distributed via `integrations/stylex-design-system/package/`.
 - Keep rules generic and suitable for reuse across repositories. Do not add application-specific names, paths, or exceptions.
 - Use each language's native mature analysis framework before adding another parser or custom engine.
 - TypeScript/JavaScript uses Oxlint ESTree rules.

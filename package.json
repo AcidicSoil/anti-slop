@@ -27,6 +27,7 @@
     "@stylexjs/eslint-plugin": "0.19.1",
     "@types/node": "26.6.6",
     "eslint": "10.14.0",
+    "eslint-plugin-stylex-design-system": "file:integrations/stylex-design-system/package",
     "oxlint": "1.90.0",
     "oxlint-tsgolint": "7.0.2005",
     "stylelint": "17.16.0",
