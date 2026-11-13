@@ -1,14 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, rmSync, existsSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { mkdtempSync, rmSync, existsSync } from "node:fs";
+import { join, relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import stylelint from "stylelint";
 
 test("vendored CSS plugin installs without overwrite and works in consumer", async () => {
-  const cache = resolve("node_modules/.cache");
-  mkdirSync(cache, { recursive: true });
-  const workspace = mkdtempSync(join(cache, "anti-slop-css-"));
+  const workspace = mkdtempSync(join(process.cwd(), "anti-slop-css-"));
   const script = resolve("skills/install-anti-slop-css/scripts/install.mjs");
   const plugin = join(workspace, "tools/stylelint/anti-slop-css");
   try {
@@ -26,7 +24,7 @@ test("vendored CSS plugin installs without overwrite and works in consumer", asy
         rules: {
           "anti-slop-css/max-stylesheet-size": 1,
           "anti-slop-css/require-style-ownership": {
-            sourceRoots: ["node_modules/.cache"],
+            sourceRoots: [relative(process.cwd(), workspace)],
             ownerDirectories: ["features"],
             scopedSuffixes: [".module.css"],
             allowedGlobalDirectories: [],
@@ -35,6 +33,7 @@ test("vendored CSS plugin installs without overwrite and works in consumer", asy
         },
       },
     });
+    assert.equal(results.length, 1, "Stylelint must lint the installed consumer stylesheet");
     assert.equal(results[0].warnings.filter((warning) => warning.rule === "anti-slop-css/max-stylesheet-size").length, 1);
     assert.equal(results[0].warnings.filter((warning) => warning.rule === "anti-slop-css/require-style-ownership").length, 1);
   } finally {
