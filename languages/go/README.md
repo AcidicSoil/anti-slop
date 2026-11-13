@@ -3,7 +3,7 @@
 Go uses `golang.org/x/tools/go/analysis` with a type-aware multichecker.
 
 Analyzers:
-- `antislopcontracts`: rejects `any` / `interface{}` parameters and returns, and `map[string]any` contracts.
+- `antislopcontracts`: rejects explicit predeclared `any` / literal `interface{}` parameters and returns, and maps using those raw value types. Named or aliased interfaces (including framework-owned event contracts such as `tea.Msg`) are not reported merely because their underlying interface has no methods.
 - `antislopptrinterface`: rejects `*Interface` without banning `*T` when `T` is a type parameter.
 - `antislopreflectcall`: rejects dynamic `reflect.Value.Call` and `CallSlice`, but allows `reflect.TypeOf`, `ValueOf`, and ordinary inspection.
 - `antislopreflectnamedaccess`: rejects `FieldByName`, `FieldByNameFunc`, and `MethodByName` on standard-library reflection receivers. Unrelated methods with identical names are allowed.

@@ -43,12 +43,14 @@ func checkFieldList(pass *analysis.Pass, fields *ast.FieldList, kind string) {
 }
 
 func isAnyType(pass *analysis.Pass, expr ast.Expr) bool {
-	typeInfo := pass.TypesInfo.TypeOf(expr)
-	if typeInfo == nil {
+	switch node := expr.(type) {
+	case *ast.InterfaceType:
+		return node.Methods == nil || len(node.Methods.List) == 0
+	case *ast.Ident:
+		return pass.TypesInfo.Uses[node] == types.Universe.Lookup("any")
+	default:
 		return false
 	}
-	iface, ok := typeInfo.Underlying().(*types.Interface)
-	return ok && iface.NumMethods() == 0
 }
 
 func isStringType(pass *analysis.Pass, expr ast.Expr) bool {
