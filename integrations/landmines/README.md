@@ -4,6 +4,18 @@
 
 The [recommended configuration](recommended.json) enables eight rules: five testing rules (`no-test-doubles`, `strict-msw`, `no-fixed-sleep`, `no-unsignaled-poll`, `no-flake-masking`) and three structure rules (`colocated-tests`, `test-file-names`, `package-exports`). It is enabled in this repository and available as an optional addition to vendored anti-slop installations.
 
+## Install through Stackforge
+
+After registering the [anti-slop setup source](../../README.md#install-from-stackforge), refresh it and preview the dedicated optional setup:
+
+```sh
+stackforge setup sync anti-slop
+stackforge setup apply anti-slop/landmines --target /path/to/project --dry-run
+stackforge setup apply anti-slop/landmines --target /path/to/project
+```
+
+Stackforge adds the pinned dependency and stages this preset at `tools/oxlint/landmines-recommended.json`. Add the `extends` entry shown below to your existing Oxlint configuration after reviewing overlaps. Staging the preset alone does not enable lint rules.
+
 ## Add to an existing project
 
 Requires Node.js 22.18+ and Oxlint 1.81+.
