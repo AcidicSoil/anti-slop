@@ -1,7 +1,7 @@
 version = 1
 
 [setups.typescript]
-description = "Install the anti-slop Oxlint plugin for TypeScript and JavaScript projects."
+description = "STAGED, NOT ACTIVE: install matching oxlint/@oxlint/plugins, merge copied rules into .oxlintrc.json or configure --config oxlint.config.ts, then run lint:anti-slop. See README.md#activate-stackforge-setups."
 
 [setups.typescript.package_json.scripts]
 "lint:anti-slop" = "oxlint ."
@@ -12,7 +12,7 @@ description = "Install the anti-slop Oxlint plugin for TypeScript and JavaScript
 "tools/oxlint/anti-slop/LICENSE" = "LICENSE"
 
 [setups.shadcn]
-description = "Stage complete enhanced @shadcn/lint (six upstream and thirteen Good CSS rules); configure only reviewed rules."
+description = "STAGED, NOT ACTIVE: register @shadcn/lint in the project's Oxlint or ESLint config, enable reviewed shadcn rules, and run the UI linter. See languages/shadcn/README.md."
 
 [setups.shadcn.package_json.devDependencies]
 "@shadcn/lint" = "file:tools/oxlint/shadcn-lint"
@@ -21,7 +21,7 @@ description = "Stage complete enhanced @shadcn/lint (six upstream and thirteen G
 "tools/oxlint/shadcn-lint" = "integrations/shadcn-lint/package"
 
 [setups.stylex]
-description = "Stage official StyleX checks and design-system enforcement without replacing the project's lint configuration."
+description = "STAGED, NOT ACTIVE: merge languages/stylex/oxlint.config.example.ts with the active lint config, set real token/component paths, and run Oxlint. See languages/stylex/README.md."
 
 [setups.stylex.package_json.devDependencies]
 "@stylexjs/eslint-plugin" = "0.19.1"
@@ -31,32 +31,32 @@ description = "Stage official StyleX checks and design-system enforcement withou
 "tools/eslint/stylex-design-system" = "integrations/stylex-design-system/package"
 
 [setups.css]
-description = "Stage the anti-slop Stylelint plugin while preserving existing CSS tooling."
+description = "STAGED, NOT ACTIVE: install Stylelint and stylelint-config-standard, merge languages/css/stylelint.config.mjs with project-specific paths, then run Stylelint. See languages/css/README.md."
 
 [setups.css.files]
 "tools/stylelint/anti-slop-css" = "skills/install-anti-slop-css/assets/anti-slop-css"
 
 [setups.python]
-description = "Stage the Python anti-slop Pylint checker and preserve existing Python tooling."
+description = "STAGED, NOT ACTIVE: install Pylint, load tools.pylint.anti_slop and lint project-owned Python files. See languages/python/README.md."
 
 [setups.python.files]
 "tools/pylint/anti_slop.py" = "languages/python/anti_slop.py"
 
 [setups.rust]
-description = "Stage Rust anti-slop Clippy and rustc policies for Cargo lint integration."
+description = "STAGED, NOT ACTIVE: merge the copied profiles into Cargo.toml [lints.clippy] and [lints.rust] (or workspace equivalents), then run cargo clippy. See languages/rust/README.md."
 
 [setups.rust.files]
 "tools/anti-slop/rust/anti-slop-clippy.toml" = "languages/rust/anti-slop-clippy.toml"
 "tools/anti-slop/rust/anti-slop-rust.toml" = "languages/rust/anti-slop-rust.toml"
 
 [setups.go]
-description = "Stage the Go anti-slop analyzer source for repository-local integration."
+description = "STAGED, NOT ACTIVE: build the included tools/anti-slop Go module (go.mod already exists), then run the multichecker on project packages. See languages/go/README.md."
 
 [setups.go.files]
 "tools/anti-slop" = "languages/go"
 
 [setups.landmines]
-description = "Stage the optional Landmines Oxlint companion checks without replacing existing lint configuration."
+description = "STAGED, NOT ACTIVE: extend the active Oxlint config with tools/oxlint/landmines-recommended.json, review rule overlaps, then run Oxlint. See integrations/landmines/README.md."
 
 [setups.landmines.package_json.devDependencies]
 "@interfere/landmines" = "0.1.0"

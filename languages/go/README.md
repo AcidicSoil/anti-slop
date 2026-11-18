@@ -9,6 +9,17 @@ Analyzers:
 - `antislopreflectnamedaccess`: rejects `FieldByName`, `FieldByNameFunc`, and `MethodByName` on standard-library reflection receivers. Unrelated methods with identical names are allowed.
 - `antislopwidenassert`: rejects a direct local concrete value widened to `any` and immediately asserted back. Reassignment, escape, control-flow changes, and unknown interfaces are excluded.
 
+## Activate a Stackforge installation
+
+The `anti-slop/go` setup copies the **complete** existing Go module to `tools/anti-slop/`, including `go.mod` and `go.sum`. No `go mod init` is needed for that setup. With a compatible Go toolchain, build and run the staged multichecker from the consuming project:
+
+```sh
+(cd tools/anti-slop && go build -o anti-slop ./cmd/anti-slop)
+./tools/anti-slop/anti-slop ./...
+```
+
+Add the verified invocation to the project's normal Go lint task. The generic install skill described below can initialize a module **only if it did not copy an existing `go.mod`**.
+
 For direct development and tests, use the included module:
 
 ```bash
