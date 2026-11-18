@@ -18,7 +18,7 @@
     "check:skill-assets": "node scripts/sync-skill-assets.mjs --check",
     "test:shadcn": "node --test languages/shadcn/tests/*.test.mjs && python3 scripts/test_shadcn_setup.py",
     "test:stylex": "node --test languages/stylex/tests/*.test.mjs",
-    "test:landmines": "node --test scripts/test_landmines_integration.mjs"
+    "test:landmines": "node --test scripts/test_landmines_integration.mjs && python3 scripts/test_landmines_setup.py"
   },
   "dependencies": {
     "@oxlint/plugins": "1.90.0"

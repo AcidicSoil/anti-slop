@@ -54,3 +54,12 @@ description = "Stage the Go anti-slop analyzer source for repository-local integ
 
 [setups.go.files]
 "tools/anti-slop" = "languages/go"
+
+[setups.landmines]
+description = "Stage the optional Landmines Oxlint companion checks without replacing existing lint configuration."
+
+[setups.landmines.package_json.devDependencies]
+"@interfere/landmines" = "0.1.0"
+
+[setups.landmines.files]
+"tools/oxlint/landmines-recommended.json" = "integrations/landmines/recommended.json"
