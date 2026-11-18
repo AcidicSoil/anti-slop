@@ -1,0 +1,14 @@
+# Targeted pushed-file checks; full Linux suite runs in GitHub Actions.
+
+pre-push:
+  parallel: false
+  jobs:
+    - name: changed-js-lint
+      glob: "*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}"
+      run: 'pnpm exec oxlint --no-error-on-unmatched-pattern {push_files}'
+    - name: typecheck-changed-ts
+      glob: "*.{ts,cts,mts,tsx}"
+      run: 'pnpm run typecheck'
+    - name: changed-rule-tests
+      glob: "*.test.ts"
+      run: 'pnpm exec tsx --test {push_files}'
