@@ -132,3 +132,9 @@ Complete when the operation and target path are established and pre-existing wor
 5. Record provenance in `UPSTREAM.md` beside the vendored entry point: source repository, exact source commit or recoverable pristine snapshot when available, installed plugin paths, and intentional deviations. Verify that the revision identifies the actual copied assets; a package version or the current upstream HEAD alone is insufficient. If provenance cannot be established, record it as unknown rather than guessing.
 
    Review the final diff and report the installed path, source identity, dependency/configuration changes, and check results. Complete when the record and report describe the files actually installed and any remaining findings.
+
+### Optional Landmines companion
+
+If the user requests [Landmines](https://github.com/interfere-inc/landmines), use the repo's [integration guide](https://github.com/AcidicSoil/anti-slop/blob/main/integrations/landmines/README.md) and [selected rule configuration](https://github.com/AcidicSoil/anti-slop/blob/main/integrations/landmines/recommended.json). Install `@interfere/landmines` as an exact development dependency using the consumer's package manager, verifying Node.js 22.18+ and Oxlint 1.81+ first. Stage the selected config within the consumer repository and merge it into existing Oxlint/Vite+ settings; do not silently extend upstream's full preset. The companion is not part of the vendored anti-slop source.
+
+Review overlap between `anti-slop/no-module-mocking` and `landmines-testing/no-test-doubles` in test files. Do not enable `landmines-style/no-comments` alongside required `// SAFETY:` comments, or `landmines-types/no-explicit-return-types` without an explicit return-type policy decision. Verify enabled rules on real violation fixtures and run the consumer's existing lint and tests. Record the exact installed package version and local policy file in the consumer's provenance.

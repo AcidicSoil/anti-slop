@@ -40,6 +40,12 @@ StyleX uses [four official rules and five standalone design-system rules](langua
 
 CSS uses [three Stylelint architecture rules](languages/css/README.md): stylesheet size, scoped ownership, and cross-feature dependencies. The CSS install skill also prescribes a verified migration of existing oversized or global stylesheets; it does not blindly auto-split CSS.
 
+## Landmines companion rules
+
+[Landmines](https://github.com/interfere-inc/landmines) adds checks for test doubles, fixed sleeps, retries, polling without signals, unhandled MSW requests, test placement and naming, and package exports. Anti-slop uses its published Oxlint plugin rather than duplicating the implementation.
+
+Eight compatible rules are enabled for this repository. Consumers can opt in with the [Landmines integration guide](integrations/landmines/README.md); the upstream package is a separate dependency. Its blanket comment ban conflicts with anti-slop's safety-justification rule, and its return-type policy is kept optional. The existing `no-module-mocking` rule remains available for consumers without Landmines.
+
 ## Install with an agent skill
 
 ```bash
