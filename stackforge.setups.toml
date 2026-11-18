@@ -55,6 +55,13 @@ description = "STAGED, NOT ACTIVE: build the included tools/anti-slop Go module 
 [setups.go.files]
 "tools/anti-slop" = "languages/go"
 
+[setups.codehygiene]
+description = "STAGED, NOT ACTIVE: use uvx to review individual changed files with the pinned CodeHygiene CLI; add --check only after choosing a blocking policy. See integrations/codehygiene/README.md."
+
+[setups.codehygiene.files]
+"tools/anti-slop/codehygiene/run.sh" = "integrations/codehygiene/run.sh"
+"tools/anti-slop/codehygiene/README.md" = "integrations/codehygiene/README.md"
+
 [setups.landmines]
 description = "STAGED, NOT ACTIVE: extend the active Oxlint config with tools/oxlint/landmines-recommended.json, review rule overlaps, then run Oxlint. See integrations/landmines/README.md."
 

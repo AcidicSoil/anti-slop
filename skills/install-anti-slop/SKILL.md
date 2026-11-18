@@ -133,6 +133,10 @@ Complete when the operation and target path are established and pre-existing wor
 
    Review the final diff and report the installed path, source identity, dependency/configuration changes, and check results. Complete when the record and report describe the files actually installed and any remaining findings.
 
+### Optional CodeHygiene companion
+
+For a requested structural-readability check beyond deterministic Oxlint rules, use the separately opt-in [CodeHygiene integration](https://github.com/AcidicSoil/anti-slop/blob/main/integrations/codehygiene/README.md). Prefer the `anti-slop/codehygiene` Stackforge setup and its pinned `uvx` launcher. Run on small touched-file selections, after behavior and native lint verification. Treat findings as review feedback until the project explicitly chooses `--check`; the early-preview model can produce false positives. Do not automatically scan whole repositories or add a default CI gate.
+
 ### Optional Landmines companion
 
 If the user requests [Landmines](https://github.com/interfere-inc/landmines), use the repo's [integration guide](https://github.com/AcidicSoil/anti-slop/blob/main/integrations/landmines/README.md) and [selected rule configuration](https://github.com/AcidicSoil/anti-slop/blob/main/integrations/landmines/recommended.json). Install `@interfere/landmines` as an exact development dependency using the consumer's package manager, verifying Node.js 22.18+ and Oxlint 1.81+ first. Stage the selected config within the consumer repository and merge it into existing Oxlint/Vite+ settings; do not silently extend upstream's full preset. The companion is not part of the vendored anti-slop source.

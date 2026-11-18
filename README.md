@@ -46,6 +46,10 @@ CSS uses [three Stylelint architecture rules](languages/css/README.md): styleshe
 
 Eight compatible rules are enabled for this repository. Consumers can opt in with the [Landmines integration guide](integrations/landmines/README.md) or the `anti-slop/landmines` Stackforge setup, which stages the preset and adds the upstream package as a separate dependency. Its blanket comment ban conflicts with anti-slop's safety-justification rule, and its return-type policy is kept optional. The existing `no-module-mocking` rule remains available for consumers without Landmines.
 
+## CodeHygiene companion
+
+[CodeHygiene](https://github.com/brianbell-x/codehygiene) adds an experimental, local structural-readability check for touched files across TypeScript, JavaScript, Python, Rust, Go, and other languages. The separate `anti-slop/codehygiene` Stackforge setup stages a pinned `uvx` launcher and usage guide without installing any project packages or enabling any automatic checks. See the [CodeHygiene integration guide](integrations/codehygiene/README.md).
+
 ## Install with an agent skill
 
 ```bash
@@ -77,6 +81,7 @@ stackforge setup list
 | Setup | Activation after applying | Detailed instructions |
 | --- | --- | --- |
 | `anti-slop/typescript` | Install matching `oxlint` and `@oxlint/plugins` if missing; merge the staged plugin, rules and ignores into the active `.oxlintrc.json`, or change the lint script to `oxlint --config ./oxlint.config.ts .` (requires Node.js). Oxlint defaults to `.oxlintrc.json`, so the staged `oxlint.config.ts` is not automatically loaded; verify `pnpm run lint:anti-slop` and include the check in CI. | [Oxlint registration](#manual-local-installation) |
+| `anti-slop/codehygiene` | Install `uv` if needed, then run `bash tools/anti-slop/codehygiene/run.sh path/to/changed.ts` for advisory feedback; append `--check` only to opt into a failing check. No CI, hook or project script is installed automatically. | [CodeHygiene integration](integrations/codehygiene/README.md) |
 | `anti-slop/landmines` | Add `"extends": ["./tools/oxlint/landmines-recommended.json"]` to the active `.oxlintrc.json`, or merge that preset's `jsPlugins` and `rules` into an existing TS/JS config; review overlap with anti-slop, then run Oxlint. | [Landmines integration](integrations/landmines/README.md#install-through-stackforge) |
 | `anti-slop/shadcn` | Register `@shadcn/lint` in the active Oxlint `jsPlugins` or ESLint `plugins`; explicitly enable reviewed `shadcn/*` rules and run the project's UI linter. | [Shadcn linter registration](languages/shadcn/README.md#linter-registration-ppm-owned) |
 | `anti-slop/stylex` | Merge the [Oxlint example](languages/stylex/oxlint.config.example.ts) into the active lint config; set `componentImports` and `tokenModules` for the project and run Oxlint on JS/TS. | [StyleX installation](languages/stylex/README.md#install) |
