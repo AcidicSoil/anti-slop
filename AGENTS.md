@@ -11,3 +11,7 @@
 - Add focused tests or violation fixtures for semantic rule changes.
 - Run `pnpm sync:skill-assets` after changing canonical implementations.
 - Run `pnpm check` before committing TypeScript changes; validate each changed language implementation with its native toolchain when available.
+
+## CI enforcement — selected projects
+
+Apply `~/.agents/skills/github-actions-self-hosted-project-setup/references/ci-enforcement.md` to this repository's engineering workflow. **After changes, run affected tests, lint, and type checks using existing native commands**, respecting stricter project-specific gates; report actual failures, avoid repeated passing checks and routine full-suite runs. This project's approved rollout targets **exhaustive offline Linux CI on pull requests and default-branch pushes**, targeted pre-push checks through the active hook, **Zoomies + official self-hosted** runner options where safely routable, and required GitHub status checks where available. Follow `~/.agents/skills/github-actions-self-hosted-project-setup/SKILL.md` for setup, permissions, and verification. Preserve global hooks; describe unconfigured gates as pending, not enforced.
