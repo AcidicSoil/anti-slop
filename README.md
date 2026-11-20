@@ -127,7 +127,7 @@ npx skills add AcidicSoil/anti-slop --list
 
 ## Manual local installation
 
-Copy `src/` into the target repository, for example at `tools/oxlint/anti-slop/`. If the repository already uses `oxlint`, install `@oxlint/plugins` at exactly the resolved Oxlint version. Otherwise, install the same current version of both packages. Keep both versions exact so upgrades move them together.
+Copy `src/` into the target repository, for example at `tools/oxlint/anti-slop/`. Run `node tools/oxlint/anti-slop/check-suppressions.mjs` before Oxlint in the active lint command, and install compatible `oxc-parser` as a development dependency. If the repository already uses `oxlint`, install `@oxlint/plugins` at exactly the resolved Oxlint version. Otherwise, install the same current version of both packages. Keep both versions exact so upgrades move them together.
 
 Register the copied entry point in `oxlint.config.ts`:
 
@@ -135,6 +135,10 @@ Register the copied entry point in `oxlint.config.ts`:
 import { defineConfig } from "oxlint";
 
 export default defineConfig({
+  options: {
+    reportUnusedDisableDirectives: "error",
+    respectEslintDisableDirectives: false,
+  },
   ignorePatterns: [
     ".agent/**",
     ".agents/**",
@@ -165,6 +169,7 @@ export default defineConfig({
     "anti-slop/no-conditional-empty-object-spread": "error",
     "anti-slop/no-known-value-widening": "error",
     "anti-slop/no-module-mocking": "error",
+    "anti-slop/no-lint-suppression-directives": "error",
     "anti-slop/no-object-parameters": "error",
     "anti-slop/no-reflect-apply": "error",
     "anti-slop/no-reflect-get": "error",
@@ -231,6 +236,7 @@ export default defineConfig({
 - `no-conditional-empty-object-spread` — reports object spreads that use a conditional `{}` branch to omit fields. It intentionally has no autofix because omission is not equivalent to assigning `undefined`.
 - `no-known-value-widening` — rejects known expressions flowing into explicit `unknown`, `object`, anonymous-object, or open-dictionary targets, including known arguments passed to local `unknown` type predicates. Empty dictionary accumulators and finite-key `Record` targets remain valid.
 - `no-module-mocking` — rejects Vitest and Jest `mock`, `doMock`, and `unstable_mockModule` calls in favor of real dependency seams.
+- `no-lint-suppression-directives` — rejects `eslint-disable*`, `oxlint-disable*`, `@ts-ignore`, `@ts-nocheck`, and `@ts-expect-error` comments. The required `check-suppressions.mjs` preflight uses Oxc parser to catch file-wide disables that silence Oxlint itself. Protect lint configs through repository review and CI policy; a lint rule alone cannot prevent config edits.
 - `no-object-parameters` — rejects `object`, unions containing it, and scoped or transparent generic aliases that resolve to it on function inputs.
 - `no-reflect-apply` — rejects global `Reflect.apply` in favor of typed function calls.
 - `no-reflect-get` — rejects global `Reflect.get` in favor of typed property access or boundary parsing.

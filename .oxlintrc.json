@@ -1,8 +1,12 @@
 {
   "options": {
-    "typeAware": true
+    "typeAware": true,
+    "reportUnusedDisableDirectives": "error",
+    "respectEslintDisableDirectives": false
   },
+  "jsPlugins": ["./src/index.ts"],
   "rules": {
+    "anti-slop/no-lint-suppression-directives": "error",
     "oxc/no-accumulating-spread": "error",
     "typescript/no-confusing-non-null-assertion": "error",
     "typescript/no-empty-object-type": "error",

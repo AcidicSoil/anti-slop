@@ -9,6 +9,7 @@
 - Go uses `golang.org/x/tools/go/analysis`.
 - Rust uses Clippy first; add Dylint only for policies Clippy cannot express.
 - Add focused tests or violation fixtures for semantic rule changes.
+- Do not suppress diagnostics, disable lint rules, weaken lint configuration, or add exclusions to bypass policy. Correct the source violations; policy changes need explicit owner approval.
 - Run `pnpm sync:skill-assets` after changing canonical implementations.
 - Run `pnpm check` before committing TypeScript changes; validate each changed language implementation with its native toolchain when available.
 

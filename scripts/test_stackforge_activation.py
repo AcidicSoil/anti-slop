@@ -62,6 +62,16 @@ class StackforgeActivationTest(unittest.TestCase):
                 else:
                     self.assertEqual(invocation, " ".join(setup["activation"]["verify"][0][:2]))
 
+    def test_typescript_setup_enforces_suppression_preflight(self):
+        setup = self.setups["typescript"]
+        command = setup["package_json"]["scripts"]["lint:anti-slop"]
+        self.assertEqual(
+            command.split(" && ", 1)[0],
+            "node tools/oxlint/anti-slop/check-suppressions.mjs",
+        )
+        self.assertIn("oxc-parser", setup["package_json"]["devDependencies"])
+        self.assertTrue((ROOT / "src/check-suppressions.mjs").exists())
+
     def test_codehygiene_keeps_advisory_semantics(self):
         setup = self.setups["codehygiene"]
         self.assertNotIn("package_json", setup)

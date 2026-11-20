@@ -1,6 +1,10 @@
 import { defineConfig } from "oxlint";
 
 export default defineConfig({
+  options: {
+    reportUnusedDisableDirectives: "error",
+    respectEslintDisableDirectives: false,
+  },
   ignorePatterns: [
     ".agent/**",
     ".agents/**",
@@ -32,6 +36,7 @@ export default defineConfig({
     "anti-slop/no-conditional-empty-object-spread": "error",
     "anti-slop/no-known-value-widening": "error",
     "anti-slop/no-module-mocking": "error",
+    "anti-slop/no-lint-suppression-directives": "error",
     "anti-slop/no-object-parameters": "error",
     "anti-slop/no-reflect-apply": "error",
     "anti-slop/no-reflect-get": "error",

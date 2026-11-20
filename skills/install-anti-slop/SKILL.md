@@ -67,7 +67,7 @@ Complete when the operation and target path are established and pre-existing wor
 
    For Vite+, add these fields to `lint.ignorePatterns` and `lint.jsPlugins`. Also merge the same patterns into `fmt.ignorePatterns` so `vp check` does not reformat installed agent assets or the vendored plugin. Merge existing entries instead of replacing them.
 
-   Enable these rules at `"error"`, including the native Oxlint companion rule:
+   Add `options.reportUnusedDisableDirectives: "error"` and `options.respectEslintDisableDirectives: false` in the root Oxlint config; preserve existing `options` values. Enable these rules at `"error"`, including the native Oxlint companion rule:
 
    ```json
    {
@@ -80,6 +80,7 @@ Complete when the operation and target path are established and pre-existing wor
      "anti-slop/no-conditional-empty-object-spread": "error",
      "anti-slop/no-known-value-widening": "error",
      "anti-slop/no-module-mocking": "error",
+     "anti-slop/no-lint-suppression-directives": "error",
      "anti-slop/no-object-parameters": "error",
      "anti-slop/no-reflect-apply": "error",
      "anti-slop/no-reflect-get": "error",
@@ -123,7 +124,7 @@ Complete when the operation and target path are established and pre-existing wor
 
    Complete when the generic rules and eligible Effect rules are registered and existing configuration is preserved.
 
-4. Run the repository's lint command and typecheck. For Vite+, run the repository's full `vp check` command after adding both lint and format ignores. If findings appear in owned project source, report them and fix them only when the user asked for migration/cleanup. Do not suppress rules, weaken rule severity, add unsafe casts, or mechanically launder types to make lint pass.
+4. Install `oxc-parser` as a pinned development dependency (keep an existing compatible version). Prepend `node tools/oxlint/anti-slop/check-suppressions.mjs &&` to the project's active lint command, adjusting for nondefault install paths. The independent parser-backed gate rejects file-wide disables that silence Oxlint itself. It scans Git-tracked and untracked, non-ignored JS/TS files. Preserve the existing lint commands after this preflight. Then run the repository's lint command and typecheck. For Vite+, run the repository's full `vp check` command after adding both lint and format ignores. If findings appear in owned project source, report them and fix them only when the user asked for migration/cleanup. Do not suppress rules, weaken rule severity, add unsafe casts, or mechanically launder types to make lint pass.
 
    When cleanup is authorized, apply `require-readable-spacing` with lint autofix, then run the repository's formatter and lint again. Confirm a second fix/format pass leaves files unchanged. Keep whitespace fixes separate from semantic edits, preserve documentation attachment and overload groups, and do not enable an entire competing formatting preset.
 

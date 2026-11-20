@@ -52,7 +52,7 @@ function syncFile(source, destination) {
 syncDirectory(
   join(root, "src"),
   join(root, "skills/install-anti-slop/assets/anti-slop"),
-  (path) => !path.endsWith(".test.ts"),
+  (path) => !path.endsWith(".test.ts") && !path.endsWith(".test.mjs"),
 );
 syncDirectory(
   join(root, "languages/css"),
