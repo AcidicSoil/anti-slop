@@ -36,6 +36,17 @@ description = "STAGED, NOT ACTIVE: install Stylelint and stylelint-config-standa
 [setups.css.files]
 "tools/stylelint/anti-slop-css" = "skills/install-anti-slop-css/assets/anti-slop-css"
 
+[setups.css-tailwind]
+description = "STAGED, NOT ACTIVE: strict Tailwind v4 CSS ownership; only src/styles/globals.css and src/styles/tokens.css, no CSS Modules. Wire Stylelint into the owning project lint/CI commands after migration."
+
+[setups.css-tailwind.package_json.devDependencies]
+"stylelint" = "17.16.0"
+"stylelint-config-standard" = "40.0.0"
+
+[setups.css-tailwind.files]
+"stylelint.config.mjs" = "languages/css/stylelint.config.mjs"
+"tools/stylelint/anti-slop-css" = "skills/install-anti-slop-css/assets/anti-slop-css"
+
 [setups.python]
 description = "STAGED, NOT ACTIVE: install Pylint, load tools.pylint.anti_slop and lint project-owned Python files. See languages/python/README.md."
 

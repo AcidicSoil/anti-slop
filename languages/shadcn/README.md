@@ -34,7 +34,7 @@ See the existing PPM `quality-tooling-bootstrap.md` and [upstream setup contract
 
 The thirteen additional opt-in rules are: `prefer-logical-utilities`, `prefer-focus-visible`, `prefer-motion-safe`, `no-transition-all`, `no-disabled-zoom`, `no-ease-in`, `no-long-transitions`, `no-selection-disable-on-content`, `prefer-bounded-textarea`, `prefer-flex-gap`, `prefer-motion-safe-scroll`, `prefer-shrinkable-truncate`, and `prefer-small-viewport-height`. Each is available under the `shadcn/` prefix.
 
-Plain CSS belongs to the existing `anti-slop/css` Stylelint setup. The shared Stylelint example includes logical-property and transition-property checks; review these choices before enabling them in projects. No duplicate CSS parser is installed.
+Plain CSS belongs to the existing `anti-slop/css` Stylelint plugin setup; strict Tailwind projects can instead install `anti-slop/css-tailwind`, which disallows CSS Modules and any stylesheet beyond `src/styles/globals.css` and `src/styles/tokens.css`. The shared Stylelint example includes logical-property and transition-property checks; review these choices before enabling them in projects. No duplicate CSS parser is installed.
 
 ## Updating the vendored upstream implementation
 

@@ -7,6 +7,7 @@ export function sourcePath(root) {
 
 export function inside(directory, file) {
   const prefix = directory.replaceAll("\\", "/").replace(/^\.\//, "").replace(/\/$/, "");
+  if (prefix === ".") return file !== ".." && !file.startsWith("../") && !file.startsWith("/");
   return file === prefix || file.startsWith(`${prefix}/`);
 }
 

@@ -114,3 +114,36 @@ test('shared Stylelint preset rejects physical inline properties and transition-
     'declaration-property-value-disallowed-list',
   ].sort());
 });
+
+
+test("Tailwind preset enforces exactly globals.css and tokens.css", async () => {
+  const config = (await import("../stylelint.config.mjs")).default;
+  for (const [file, content, expected] of [
+    ["src/styles/globals.css", 'body { color: var(--foreground); }', false],
+    ["src/styles/tokens.css", ':root { --foreground: #111; }', false],
+    ["src/styles/tokens.css", "@theme inline { --color-background: var(--background); } :root { --background: #fff; } .dark { --background: #111; }", false],
+    ["src/components/Button.module.css", ".button { color: red; }", true],
+    ["src/features/chat/chat.module.css", ".chat { display: flex; }", true],
+    ["src/styles/more.css", ".extra { color: red; }", true],
+    ["public/reset.css", "body { margin: 0; }", true],
+  ]) {
+    const { results } = await stylelint.lint({ code: content, codeFilename: file, config: { ...config, plugins: rules } });
+    const blocked = results[0].warnings.some(({ rule }) => rule === "anti-slop-css/require-style-ownership");
+    assert.equal(blocked, expected, file);
+  }
+});
+
+test("Tailwind preset isolates tokens from global foundations", async () => {
+  const config = (await import("../stylelint.config.mjs")).default;
+  for (const [file, content, expectedRule] of [
+    ["src/styles/globals.css", ':root { --foreground: red; }', "property-disallowed-list"],
+    ["src/styles/globals.css", "body { margin-left: 3px; }", "property-disallowed-list"],
+    ["src/styles/globals.css", '@theme { --color-primary: red; }', "at-rule-disallowed-list"],
+    ["src/styles/globals.css", '.button { color: red; }', "selector-disallowed-list"],
+    ["src/styles/tokens.css", '@import "other.css";', "at-rule-disallowed-list"],
+    ["src/styles/tokens.css", '.button { color: red; }', "selector-disallowed-list"],
+  ]) {
+    const { results } = await stylelint.lint({ code: content, codeFilename: file, config: { ...config, plugins: rules } });
+    assert.ok(results[0].warnings.some(({ rule }) => rule === expectedRule), file + " " + expectedRule);
+  }
+});

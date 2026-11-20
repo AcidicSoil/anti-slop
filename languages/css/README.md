@@ -4,11 +4,11 @@ CSS rules use **Stylelint**, not Oxlint. The canonical implementation is `langua
 
 ## Install
 
-Install `stylelint` and `stylelint-config-standard` with the consuming project's package manager, keeping existing configurations. Use the `install-anti-slop-css` skill to vendor the plugin under `tools/stylelint/anti-slop-css/`. Merge `stylelint.config.mjs` into the project's existing Stylelint config, correcting directory ownership paths and scoped suffixes for the actual project.
+Install `stylelint` and `stylelint-config-standard` with the consuming project's package manager, keeping existing configurations. Use the `install-anti-slop-css` skill to vendor the plugin under `tools/stylelint/anti-slop-css/`. The supplied `stylelint.config.mjs` is the **strict Tailwind v4 preset**: it permits only `src/styles/globals.css` and `src/styles/tokens.css` in the project and rejects CSS Modules and every other stylesheet. Adjust its two approved paths only if the project explicitly adopts a different layout. For a project using another styling architecture, configure the underlying generic rules separately rather than installing this Tailwind preset.
 
-Run `pnpm exec stylelint "src/**/*.css"` (adjust glob/package manager for the project). For SCSS, use the project's existing compatible SCSS syntax and config rather than replacing it.
+Run Stylelint over all project-owned `.css` files (excluding dependencies/generated assets) to catch unapproved stylesheet paths, and wire it into lint/CI. `anti-slop/css-tailwind` stages the strict preset and plugin as one Stackforge setup; the existing `anti-slop/css` stages only the generic plugin.
 
-The shared [Stylelint configuration](stylelint.config.mjs) also proposes the native `property-disallowed-list` and `declaration-property-value-disallowed-list` policies for writing-direction-independent properties and avoiding `transition: all`. These checks must be reviewed for the target project's CSS patterns before merging, and never replace the three architecture rules below.
+The strict [Stylelint configuration](stylelint.config.mjs) also proposes the native `property-disallowed-list` and `declaration-property-value-disallowed-list` policies for writing-direction-independent properties and avoiding `transition: all`. These checks must be reviewed for the target project's CSS patterns before merging, and never replace the three architecture rules below.
 
 ## Complementary agent guidance
 
@@ -22,7 +22,7 @@ Use installed `~/.agents/skills/good-css/SKILL.md` when authoring or reviewing C
 | `anti-slop-css/require-style-ownership` | `sourceRoots`, `ownerDirectories`, `scopedSuffixes`, `allowedGlobalDirectories`, `allowedGlobalFiles` | Reports unscoped feature/component CSS and unknown global CSS under managed source roots. |
 | `anti-slop-css/no-cross-feature-styling` | `featureRoot`, optional `allowGlobalSelectors` (default `false`) | Reports cross-feature relative `@import`, `@value`, CSS Modules `composes ... from`, and `:global` selectors inside feature CSS. |
 
-Directories are **project-root relative**, not absolute. Files outside configured source roots are not checked for ownership. Shared CSS outside `featureRoot` can be imported without a cross-feature diagnostic. `:global` can be explicitly allowed in projects that need it. Local styles are recognized by suffix, so change `scopedSuffixes` for non-CSS-Modules projects. StyleX/CSS-in-JS files are outside these CSS-only rules.
+Directories are **project-root relative**. The strict preset uses `sourceRoots: ["."]` to cover every project-owned CSS file passed to Stylelint, with an exact allowlist and no scoped suffixes or permitted CSS directories. Other consumers can use different ownership options explicitly. StyleX/CSS-in-JS files are outside these CSS-only rules.
 
 **Limits:** Static CSS files do not prove which component owns a selector. This plugin checks directory ownership, scoping conventions, and declared stylesheet dependencies. It does not claim to detect every cross-feature selector or automatically rewrite CSS without altering its cascade.
 
@@ -30,7 +30,7 @@ Directories are **project-root relative**, not absolute. Files outside configure
 
 1. Run the Stylelint command and **save the failing file/diagnostic inventory**. Start with the most frequently changed or most oversized files. The sample hard limit is 500 lines and the early warning threshold is 300.
 2. Identify the real owning component/feature for each group of selectors. Check source imports and runtime usage; do not infer ownership from selector names alone.
-3. Extract one cohesive group into a local scoped stylesheet next to its owner. Keep shared tokens/resets in explicitly allowed global files. Deduplicate only after checking cascade and media queries.
+3. For the strict Tailwind preset, move component styling, layout, variants and states into their owning components; move tokens to `tokens.css` and global foundations to `globals.css`. Remove CSS Modules rather than relocating them. Check cascade and media queries before deduplicating.
 4. Update imports; remove the original selectors only after checking computed styles, responsive states, interactions, and screenshots. `stylelint --fix` may repair safe *syntax* violations, but **does not automatically split CSS or prove visual equivalence**.
 5. Re-run affected checks and visual comparisons after each extraction. Add the source directories to the CI Stylelint step. Do not suppress existing violations indefinitely; record unresolved files and finish migration by priority.
 
@@ -38,4 +38,8 @@ Avoid arbitrary 500-line splits, duplicated copies, selector rewrites without vi
 
 ## Agent rule
 
-Keep styles local to their owning components or features. Before adding CSS, inspect current ownership and extract existing unrelated or duplicated styles instead of extending monolithic files. Audit existing CSS for oversized files, global leakage, duplicated declarations, and cross-feature references. Fix violations incrementally with cascade-preserving migrations, targeted lint checks, and rendered visual comparisons. No permanent baseline exemptions.
+In Tailwind projects using the strict preset, keep styling in owning components and allow only the two approved CSS files. Before adding CSS, inspect current ownership and extract existing unrelated or duplicated styles instead of extending monolithic files. Audit existing CSS for oversized files, global leakage, duplicated declarations, and cross-feature references. Fix violations incrementally with cascade-preserving migrations, targeted lint checks, and rendered visual comparisons. No permanent baseline exemptions.
+
+## Strict Tailwind preset boundaries
+
+`globals.css` owns the Tailwind import and global element defaults, not component selectors or tokens. `tokens.css` owns `@theme` and CSS custom properties; only `:root` and `.dark` selectors are allowed. Stylelint’s native file-scoped rules enforce these boundaries. File paths are checked by `require-style-ownership` for each stylesheet Stylelint visits; the consuming lint command must include all project-owned CSS files, not just the two allowed files. Component reuse and visual fidelity still require review.

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, existsSync } from "node:fs";
+import { mkdtempSync, rmSync, existsSync, copyFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { test } from "node:test";
@@ -13,6 +13,14 @@ test("vendored CSS plugin installs without overwrite and works in consumer", asy
     const install = spawnSync(process.execPath, [script], { cwd: workspace, encoding: "utf8" });
     assert.equal(install.status, 0, install.stderr);
     assert.ok(existsSync(join(plugin, "index.mjs")));
+    const preset = join(workspace, "stylelint.config.mjs");
+    copyFileSync(resolve("languages/css/stylelint.config.mjs"), preset);
+    const { results: strict } = await stylelint.lint({
+      code: ".button { color: red; }",
+      codeFilename: join(workspace, "src/components/Button.module.css"),
+      configFile: preset,
+    });
+    assert.ok(strict[0].warnings.some(({ rule }) => rule === "anti-slop-css/require-style-ownership"));
     const second = spawnSync(process.execPath, [script], { cwd: workspace, encoding: "utf8" });
     assert.equal(second.status, 1);
     assert.match(second.stderr, /Refusing to overwrite/);
