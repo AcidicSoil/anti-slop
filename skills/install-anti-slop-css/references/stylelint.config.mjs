@@ -10,6 +10,9 @@ export default {
   plugins: ["./tools/stylelint/anti-slop-css/index.mjs"],
   rules: {
     "anti-slop-css/max-stylesheet-size": [500, { warningAt: 300 }],
+    "anti-slop-css/no-cross-feature-styling": {
+      featureRoot: "src/features",
+    },
     "anti-slop-css/require-style-ownership": {
       sourceRoots: ["."],
       ownerDirectories: [],

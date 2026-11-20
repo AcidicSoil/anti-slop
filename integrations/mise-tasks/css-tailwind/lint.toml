@@ -1,0 +1,3 @@
+["lint:css-tailwind"]
+description = "Run all enabled anti-slop css-tailwind lint rules"
+run = "npm run lint:css-tailwind"

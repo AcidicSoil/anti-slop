@@ -1,0 +1,3 @@
+["lint:go"]
+description = "Run anti-slop Go analyzers"
+run = "bash tools/anti-slop/lint.sh"

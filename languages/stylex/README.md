@@ -7,12 +7,14 @@ Anti-slop stages and configures it; it has no separate StyleX rule implementatio
 
 ## Install
 
-1. From the consumer project, inspect `stackforge setup apply anti-slop/stylex --dry-run`.
-2. Apply the setup, then install dependencies using the project's package manager.
-3. Merge [the Oxlint rules](oxlint.config.example.ts) into the existing configuration.
-   Set `componentImports` and `tokenModules` to actual project import paths.
-4. Run Oxlint on JS/TS and a test fixture that contains invalid and valid styles.
-5. Include the verified Oxlint invocation in the project's existing lint/CI task.
+1. Review `stackforge setup apply anti-slop/stylex --dry-run`.
+2. Apply the setup; Stackforge installs dependencies and
+   `oxlint.stylex.config.ts`, links `lint:stylex` into the existing `lint`,
+   and runs its verification.
+3. Customize `componentImports` and `tokenModules` when the target's actual
+   module paths differ from the supplied defaults, then rerun `lint:stylex`.
+4. Retain the target's other Oxlint checks and existing CI commands.
+
 
 Oxlint runs all nine rules, four official and five custom:
 

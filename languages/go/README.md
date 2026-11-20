@@ -18,7 +18,10 @@ The `anti-slop/go` setup copies the **complete** existing Go module to `tools/an
 ./tools/anti-slop/anti-slop ./...
 ```
 
-Add the verified invocation to the project's normal Go lint task. The generic install skill described below can initialize a module **only if it did not copy an existing `go.mod`**.
+Stackforge now runs that check during apply and installs a discoverable
+`mise run lint:go` file task. The owning CI must invoke this task (or the
+standalone shell runner); existing Go lint tasks remain unchanged.
+The generic install skill described below can initialize a module **only if it did not copy an existing `go.mod`**.
 
 For direct development and tests, use the included module:
 

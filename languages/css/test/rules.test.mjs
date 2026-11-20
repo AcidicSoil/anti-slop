@@ -147,3 +147,10 @@ test("Tailwind preset isolates tokens from global foundations", async () => {
     assert.ok(results[0].warnings.some(({ rule }) => rule === expectedRule), file + " " + expectedRule);
   }
 });
+
+test('Stackforge uses the complete authoritative CSS preset', async () => {
+  const { default: config } = await import('../stylelint.config.mjs');
+  for (const name of ['max-stylesheet-size', 'require-style-ownership', 'no-cross-feature-styling']) {
+    assert.ok(config.rules[`anti-slop-css/${name}`], name);
+  }
+});

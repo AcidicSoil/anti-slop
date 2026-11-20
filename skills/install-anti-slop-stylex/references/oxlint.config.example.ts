@@ -2,6 +2,13 @@
 import { defineConfig } from "oxlint";
 
 export default defineConfig({
+  ignorePatterns: [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/coverage/**",
+    ".stackforge/**",
+    "tools/eslint/stylex-design-system/**",
+  ],
   jsPlugins: ["@stylexjs/eslint-plugin", "eslint-plugin-stylex-design-system"],
   rules: {
     "@stylexjs/valid-styles": "error",

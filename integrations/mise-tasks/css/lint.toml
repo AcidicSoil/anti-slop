@@ -1,0 +1,3 @@
+["lint:css"]
+description = "Run all enabled anti-slop css lint rules"
+run = "npm run lint:css-anti-slop"

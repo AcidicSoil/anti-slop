@@ -1,0 +1,3 @@
+["lint:landmines"]
+description = "Run all enabled anti-slop landmines lint rules"
+run = "npm run lint:landmines"

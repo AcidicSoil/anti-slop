@@ -1,0 +1,3 @@
+["lint:shadcn"]
+description = "Run all enabled anti-slop shadcn lint rules"
+run = "npm run lint:shadcn"

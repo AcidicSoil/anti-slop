@@ -1,83 +1,173 @@
 version = 1
 
 [setups.typescript]
-description = "STAGED, NOT ACTIVE: install matching oxlint/@oxlint/plugins, merge copied rules into .oxlintrc.json or configure --config oxlint.config.ts, then run lint:anti-slop. See README.md#activate-stackforge-setups."
+description = "TypeScript/JavaScript Oxlint rules; installs the plugin and verifies its dedicated lint command."
+
+[setups.typescript.package_json.devDependencies]
+"oxlint" = "1.90.0"
+"@oxlint/plugins" = "1.90.0"
 
 [setups.typescript.package_json.scripts]
-"lint:anti-slop" = "oxlint ."
+"lint:anti-slop" = "oxlint --config oxlint.anti-slop.config.ts ."
+
+[setups.typescript.activation.scripts]
+lint = ["lint:anti-slop"]
+
+[setups.typescript.activation]
+verify = [["node-package-manager", "run", "lint:anti-slop"]]
 
 [setups.typescript.files]
-"oxlint.config.ts" = "integrations/oxlint.config.ts"
+".mise/tasks/lint/typescript.toml" = "integrations/mise-tasks/typescript/lint.toml"
+"oxlint.anti-slop.config.ts" = "integrations/oxlint.config.ts"
 "tools/oxlint/anti-slop" = "src"
 "tools/oxlint/anti-slop/LICENSE" = "LICENSE"
 
 [setups.shadcn]
-description = "STAGED, NOT ACTIVE: register @shadcn/lint in the project's Oxlint or ESLint config, enable reviewed shadcn rules, and run the UI linter. See languages/shadcn/README.md."
+description = "Full enhanced shadcn lint; activates all rules exported by the packaged plugin."
+
+[setups.shadcn.package_json.scripts]
+"lint:shadcn" = "oxlint --config oxlint.shadcn.config.mjs ."
+
+[setups.shadcn.activation.scripts]
+lint = ["lint:shadcn"]
+
+[setups.shadcn.activation]
+verify = [["node-package-manager", "run", "lint:shadcn"]]
 
 [setups.shadcn.package_json.devDependencies]
+"oxlint" = "1.90.0"
 "@shadcn/lint" = "file:tools/oxlint/shadcn-lint"
 
 [setups.shadcn.files]
+".mise/tasks/lint/shadcn.toml" = "integrations/mise-tasks/shadcn/lint.toml"
+"oxlint.shadcn.config.mjs" = "languages/shadcn/oxlint.config.mjs"
 "tools/oxlint/shadcn-lint" = "integrations/shadcn-lint/package"
 
 [setups.stylex]
-description = "STAGED, NOT ACTIVE: merge languages/stylex/oxlint.config.example.ts with the active lint config, set real token/component paths, and run Oxlint. See languages/stylex/README.md."
+description = "StyleX lint; installs official and design-system rules with the published default token paths."
+
+[setups.stylex.package_json.scripts]
+"lint:stylex" = "oxlint --config oxlint.stylex.config.ts ."
+
+[setups.stylex.activation.scripts]
+lint = ["lint:stylex"]
+
+[setups.stylex.activation]
+verify = [["node-package-manager", "run", "lint:stylex"]]
 
 [setups.stylex.package_json.devDependencies]
+"oxlint" = "1.90.0"
 "@stylexjs/eslint-plugin" = "0.19.1"
 "eslint-plugin-stylex-design-system" = "file:tools/eslint/stylex-design-system"
 
 [setups.stylex.files]
+".mise/tasks/lint/stylex.toml" = "integrations/mise-tasks/stylex/lint.toml"
+"oxlint.stylex.config.ts" = "languages/stylex/oxlint.config.example.ts"
 "tools/eslint/stylex-design-system" = "integrations/stylex-design-system/package"
 
 [setups.css]
-description = "STAGED, NOT ACTIVE: install Stylelint and stylelint-config-standard, merge languages/css/stylelint.config.mjs with project-specific paths, then run Stylelint. See languages/css/README.md."
+description = "Complete CSS lint suite; installs the authoritative Stylelint configuration and every anti-slop CSS rule."
+
+[setups.css.package_json.devDependencies]
+"stylelint" = "17.16.0"
+"stylelint-config-standard" = "40.0.0"
+
+[setups.css.package_json.scripts]
+"lint:css-anti-slop" = "stylelint --config stylelint.anti-slop.config.mjs \"**/*.css\" --allow-empty-input"
+
+[setups.css.activation.scripts]
+lint = ["lint:css-anti-slop"]
+
+[setups.css.activation]
+verify = [["node-package-manager", "run", "lint:css-anti-slop"]]
 
 [setups.css.files]
+".mise/tasks/lint/css.toml" = "integrations/mise-tasks/css/lint.toml"
+"stylelint.anti-slop.config.mjs" = "languages/css/stylelint.config.mjs"
 "tools/stylelint/anti-slop-css" = "skills/install-anti-slop-css/assets/anti-slop-css"
 
 [setups.css-tailwind]
-description = "STAGED, NOT ACTIVE: strict Tailwind v4 CSS ownership; only src/styles/globals.css and src/styles/tokens.css, no CSS Modules. Wire Stylelint into the owning project lint/CI commands after migration."
+description = "Strict Tailwind v4 CSS lint; enforces globals.css/tokens.css ownership and checks all authored CSS."
+
+[setups.css-tailwind.package_json.scripts]
+"lint:css-tailwind" = "stylelint --config stylelint.anti-slop-tailwind.config.mjs \"**/*.css\" --allow-empty-input"
+
+[setups.css-tailwind.activation.scripts]
+lint = ["lint:css-tailwind"]
+
+[setups.css-tailwind.activation]
+verify = [["node-package-manager", "run", "lint:css-tailwind"]]
 
 [setups.css-tailwind.package_json.devDependencies]
 "stylelint" = "17.16.0"
 "stylelint-config-standard" = "40.0.0"
 
 [setups.css-tailwind.files]
-"stylelint.config.mjs" = "languages/css/stylelint.config.mjs"
+".mise/tasks/lint/css-tailwind.toml" = "integrations/mise-tasks/css-tailwind/lint.toml"
+"stylelint.anti-slop-tailwind.config.mjs" = "languages/css/stylelint.config.mjs"
 "tools/stylelint/anti-slop-css" = "skills/install-anti-slop-css/assets/anti-slop-css"
 
 [setups.python]
-description = "STAGED, NOT ACTIVE: install Pylint, load tools.pylint.anti_slop and lint project-owned Python files. See languages/python/README.md."
+description = "Python anti-slop Pylint checks; runs through a pinned uvx environment."
+
+[setups.python.activation]
+verify = [["bash", "tools/pylint/lint.sh", "."]]
 
 [setups.python.files]
+".mise/tasks/lint/python.toml" = "integrations/mise-tasks/python/lint.toml"
+"tools/pylint/lint.sh" = "languages/python/lint.sh"
 "tools/pylint/anti_slop.py" = "languages/python/anti_slop.py"
 
 [setups.rust]
-description = "STAGED, NOT ACTIVE: merge the copied profiles into Cargo.toml [lints.clippy] and [lints.rust] (or workspace equivalents), then run cargo clippy. See languages/rust/README.md."
+description = "Clippy and rustc anti-slop profiles; runs with the denied lints sourced from the installed profile."
+
+[setups.rust.activation]
+verify = [["bash", "tools/anti-slop/rust/lint.sh"]]
 
 [setups.rust.files]
+".mise/tasks/lint/rust.toml" = "integrations/mise-tasks/rust/lint.toml"
+"tools/anti-slop/rust/lint.sh" = "languages/rust/lint.sh"
 "tools/anti-slop/rust/anti-slop-clippy.toml" = "languages/rust/anti-slop-clippy.toml"
 "tools/anti-slop/rust/anti-slop-rust.toml" = "languages/rust/anti-slop-rust.toml"
 
 [setups.go]
-description = "STAGED, NOT ACTIVE: build the included tools/anti-slop Go module (go.mod already exists), then run the multichecker on project packages. See languages/go/README.md."
+description = "Go analysis multichecker; compiles the included module and checks target project packages."
+
+[setups.go.activation]
+verify = [["bash", "tools/anti-slop/lint.sh", "./..."]]
 
 [setups.go.files]
+".mise/tasks/lint/go.toml" = "integrations/mise-tasks/go/lint.toml"
 "tools/anti-slop" = "languages/go"
 
 [setups.codehygiene]
-description = "STAGED, NOT ACTIVE: use uvx to review individual changed files with the pinned CodeHygiene CLI; add --check only after choosing a blocking policy. See integrations/codehygiene/README.md."
+description = "Optional advisory structural review; installs the pinned uvx launcher and verifies it is callable."
+
+[setups.codehygiene.activation]
+verify = [["bash", "tools/anti-slop/codehygiene/run.sh", "--help"]]
 
 [setups.codehygiene.files]
+".mise/tasks/review/codehygiene.toml" = "integrations/mise-tasks/review/codehygiene.toml"
 "tools/anti-slop/codehygiene/run.sh" = "integrations/codehygiene/run.sh"
 "tools/anti-slop/codehygiene/README.md" = "integrations/codehygiene/README.md"
 
 [setups.landmines]
-description = "STAGED, NOT ACTIVE: extend the active Oxlint config with tools/oxlint/landmines-recommended.json, review rule overlaps, then run Oxlint. See integrations/landmines/README.md."
+description = "Optional Landmines Oxlint checks; installs the upstream plugin and runs its recommended eight rules."
+
+[setups.landmines.package_json.scripts]
+"lint:landmines" = "oxlint --config oxlint.landmines.config.json ."
+
+[setups.landmines.activation.scripts]
+lint = ["lint:landmines"]
+
+[setups.landmines.activation]
+verify = [["node-package-manager", "run", "lint:landmines"]]
 
 [setups.landmines.package_json.devDependencies]
+"oxlint" = "1.90.0"
 "@interfere/landmines" = "0.1.0"
 
 [setups.landmines.files]
+".mise/tasks/lint/landmines.toml" = "integrations/mise-tasks/landmines/lint.toml"
+"oxlint.landmines.config.json" = "integrations/landmines/oxlint.config.json"
 "tools/oxlint/landmines-recommended.json" = "integrations/landmines/recommended.json"

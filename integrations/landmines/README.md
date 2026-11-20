@@ -14,7 +14,7 @@ stackforge setup apply anti-slop/landmines --target /path/to/project --dry-run
 stackforge setup apply anti-slop/landmines --target /path/to/project
 ```
 
-Stackforge adds the pinned dependency and stages this preset at `tools/oxlint/landmines-recommended.json`. Add the `extends` entry shown below to your existing Oxlint configuration after reviewing overlaps. Staging the preset alone does not enable lint rules.
+Stackforge adds the pinned dependency, installs this preset at `tools/oxlint/landmines-recommended.json`, installs a root `oxlint.landmines.config.json` extending it, links `lint:landmines` into the existing `lint` task, and verifies it. The project's other Oxlint rules remain unchanged. Use the manual `extends` integration below only when intentionally consolidating lint passes, after reviewing overlaps.
 
 ## Add to an existing project
 

@@ -1,0 +1,3 @@
+["lint:stylex"]
+description = "Run all enabled anti-slop stylex lint rules"
+run = "npm run lint:stylex"

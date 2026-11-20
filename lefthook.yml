@@ -5,7 +5,7 @@ pre-push:
   jobs:
     - name: changed-js-lint
       glob: "*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}"
-      run: 'pnpm exec oxlint --no-error-on-unmatched-pattern {push_files}'
+      run: 'pnpm exec oxlint --config .oxlintrc.json --disable-nested-config --no-error-on-unmatched-pattern {push_files}'
     - name: typecheck-changed-ts
       glob: "*.{ts,cts,mts,tsx}"
       run: 'pnpm run typecheck'

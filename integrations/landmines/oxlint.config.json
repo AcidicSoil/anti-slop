@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "./tools/oxlint/landmines-recommended.json"
+  ],
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/coverage/**",
+    ".stackforge/**"
+  ]
+}

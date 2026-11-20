@@ -4,9 +4,16 @@ CSS rules use **Stylelint**, not Oxlint. The canonical implementation is `langua
 
 ## Install
 
-Install `stylelint` and `stylelint-config-standard` with the consuming project's package manager, keeping existing configurations. Use the `install-anti-slop-css` skill to vendor the plugin under `tools/stylelint/anti-slop-css/`. The supplied `stylelint.config.mjs` is the **strict Tailwind v4 preset**: it permits only `src/styles/globals.css` and `src/styles/tokens.css` in the project and rejects CSS Modules and every other stylesheet. Adjust its two approved paths only if the project explicitly adopts a different layout. For a project using another styling architecture, configure the underlying generic rules separately rather than installing this Tailwind preset.
+Install `stylelint` and `stylelint-config-standard` with the consuming project's package manager, keeping existing configurations. Use the `install-anti-slop-css` skill to vendor the plugin under `tools/stylelint/anti-slop-css/`. The supplied `stylelint.config.mjs` is the **strict Tailwind v4 preset**: it permits only `src/styles/globals.css` and `src/styles/tokens.css` in the project and rejects CSS Modules and every other stylesheet. Adjust its two approved paths only if the project explicitly adopts a different layout. A project with a different CSS architecture must explicitly customize ownership paths before enabling this strict preset.
 
-Run Stylelint over all project-owned `.css` files (excluding dependencies/generated assets) to catch unapproved stylesheet paths, and wire it into lint/CI. `anti-slop/css-tailwind` stages the strict preset and plugin as one Stackforge setup; the existing `anti-slop/css` stages only the generic plugin.
+Both `anti-slop/css` and `anti-slop/css-tailwind` install the full canonical
+Stylelint configuration, all three anti-slop CSS rules, and their native
+Stylelint policies. Each installs an independent lint script and Mise task,
+links the lint script into the project's existing aggregate lint, and verifies
+it. Choose **one** setup per project to avoid duplicate checks. The default
+ownership policy permits only `src/styles/globals.css` and
+`src/styles/tokens.css`; adapt it explicitly for a different CSS architecture
+before applying the strict preset.
 
 The strict [Stylelint configuration](stylelint.config.mjs) also proposes the native `property-disallowed-list` and `declaration-property-value-disallowed-list` policies for writing-direction-independent properties and avoiding `transition: all`. These checks must be reviewed for the target project's CSS patterns before merging, and never replace the three architecture rules below.
 

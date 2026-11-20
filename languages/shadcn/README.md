@@ -1,6 +1,6 @@
 # Enhanced shadcn/lint
 
-The `anti-slop/shadcn` Stackforge setup distributes the **complete** `@shadcn/lint` plugin: six original upstream rules plus thirteen opt-in Good CSS policies. It is an extension of the original lint implementation, not a replacement with a second parser.
+The `anti-slop/shadcn` Stackforge setup distributes the **complete** `@shadcn/lint` plugin: six original upstream rules plus thirteen Good CSS policies, all enabled by the Stackforge setup. It is an extension of the original lint implementation, not a replacement with a second parser.
 
 ## Install using existing Stackforge source
 
@@ -11,7 +11,7 @@ stackforge setup apply anti-slop/shadcn --dry-run
 stackforge setup apply anti-slop/shadcn
 ```
 
-The setup stages the local package at `tools/oxlint/shadcn-lint/` and adds the package-manager-owned dev dependency `@shadcn/lint: file:tools/oxlint/shadcn-lint`. Its package is self-contained for distribution, with pinned source provenance in `integrations/shadcn-lint/UPSTREAM.md`. Stackforge detects conflicts with existing unmanaged public package versions or modified files instead of overwriting them.
+The setup installs the local package at `tools/oxlint/shadcn-lint/`, registers `oxlint.shadcn.config.mjs`, wires `lint:shadcn` into the project's existing lint command, verifies it, and adds the package-manager-owned dev dependency `@shadcn/lint: file:tools/oxlint/shadcn-lint`. Its package is self-contained for distribution, with pinned source provenance in `integrations/shadcn-lint/UPSTREAM.md`. Stackforge detects conflicts with existing unmanaged public package versions or modified files instead of overwriting them.
 
 ## Companion styling skills (PPM-owned)
 
@@ -23,16 +23,16 @@ Skills are *not* included in the `anti-slop/shadcn` Stackforge package. Stackfor
 
 ## Linter registration (PPM-owned)
 
-Keep existing plugins, configuration, project aliases, parsers, design-system contracts and CI commands. **Stackforge does not rewrite Oxlint/ESLint config.** PPM integrates it into the existing UI linter after checking the project:
+Keep existing plugins, configuration, project aliases, parsers, design-system contracts and CI commands. **Stackforge preserves the existing Oxlint/ESLint config.** Its separate `oxlint.shadcn.config.mjs` activates all 19 packaged rules; PPM may integrate the same rules into the existing UI linter after checking the project:
 
 - Oxlint: append `"@shadcn/lint"` to existing `jsPlugins` and ignore `tools/oxlint/shadcn-lint/**` as vendored dependency input.
 - ESLint: merge `import { plugin as shadcn } from "@shadcn/lint"` into the existing `plugins: { shadcn }` entry. Retain Vue/Svelte template parsers; Oxlint alone only reads their script blocks.
 - Register in only the UI-owning linter if both are configured. Verify registration and source files linted before asserting coverage.
-- **Enable no new rules automatically**. PPM reviews `DESIGN.md`, the actual Tailwind v4 theme and component contracts and retains existing rule severity. Once approved, start newly selected rules as warnings and ratchet down violations.
+- The reusable setup enables every packaged rule at error severity. Review `DESIGN.md`, Tailwind v4 theme and component contracts before adoption in projects with incompatible styling conventions; existing violations are reported rather than suppressed.
 
 See the existing PPM `quality-tooling-bootstrap.md` and [upstream setup contract](https://github.com/shadcn-ui/lint/blob/main/SETUP.md). This plugin applies to Tailwind v4 UI projects, not Tailwind v3 or StyleX-only projects.
 
-The thirteen additional opt-in rules are: `prefer-logical-utilities`, `prefer-focus-visible`, `prefer-motion-safe`, `no-transition-all`, `no-disabled-zoom`, `no-ease-in`, `no-long-transitions`, `no-selection-disable-on-content`, `prefer-bounded-textarea`, `prefer-flex-gap`, `prefer-motion-safe-scroll`, `prefer-shrinkable-truncate`, and `prefer-small-viewport-height`. Each is available under the `shadcn/` prefix.
+The thirteen additional Good CSS rules are: `prefer-logical-utilities`, `prefer-focus-visible`, `prefer-motion-safe`, `no-transition-all`, `no-disabled-zoom`, `no-ease-in`, `no-long-transitions`, `no-selection-disable-on-content`, `prefer-bounded-textarea`, `prefer-flex-gap`, `prefer-motion-safe-scroll`, `prefer-shrinkable-truncate`, and `prefer-small-viewport-height`. Each is available under the `shadcn/` prefix.
 
 Plain CSS belongs to the existing `anti-slop/css` Stylelint plugin setup; strict Tailwind projects can instead install `anti-slop/css-tailwind`, which disallows CSS Modules and any stylesheet beyond `src/styles/globals.css` and `src/styles/tokens.css`. The shared Stylelint example includes logical-property and transition-property checks; review these choices before enabling them in projects. No duplicate CSS parser is installed.
 

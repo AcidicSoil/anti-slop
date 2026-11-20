@@ -76,21 +76,48 @@ stackforge setup list
 
 ### Activate Stackforge setups
 
-**Applying an anti-slop setup is opt-in, and applying it does not by itself enable its checks.** Stackforge stages files, package dependencies or a script; each consuming project must still complete the applicable activation steps. Preview against the project first with `stackforge setup apply anti-slop/<setup> --target /path/to/project --dry-run`. Existing configuration conflicts require a reviewed merge, not overwriting local settings.
+Applying a selected setup now installs its dependencies and rule files, registers
+the applicable standalone lint configuration, wires Node checks into the
+existing `package.json` `lint` script, and **executes its verification check**.
+It fails rather than claiming activation when a required tool is unavailable,
+a project config conflicts, or existing code violates the selected rules.
 
-| Setup | Activation after applying | Detailed instructions |
+```bash
+stackforge setup sync anti-slop
+stackforge setup apply anti-slop/<setup> --target /path/to/project --dry-run
+stackforge setup apply anti-slop/<setup> --target /path/to/project
+```
+
+| Setup | Mise task | Provided coverage |
 | --- | --- | --- |
-| `anti-slop/typescript` | Install matching `oxlint` and `@oxlint/plugins` if missing; merge the staged plugin, rules and ignores into the active `.oxlintrc.json`, or change the lint script to `oxlint --config ./oxlint.config.ts .` (requires Node.js). Oxlint defaults to `.oxlintrc.json`, so the staged `oxlint.config.ts` is not automatically loaded; verify `pnpm run lint:anti-slop` and include the check in CI. | [Oxlint registration](#manual-local-installation) |
-| `anti-slop/codehygiene` | Install `uv` if needed, then run `bash tools/anti-slop/codehygiene/run.sh path/to/changed.ts` for advisory feedback; append `--check` only to opt into a failing check. No CI, hook or project script is installed automatically. | [CodeHygiene integration](integrations/codehygiene/README.md) |
-| `anti-slop/landmines` | Add `"extends": ["./tools/oxlint/landmines-recommended.json"]` to the active `.oxlintrc.json`, or merge that preset's `jsPlugins` and `rules` into an existing TS/JS config; review overlap with anti-slop, then run Oxlint. | [Landmines integration](integrations/landmines/README.md#install-through-stackforge) |
-| `anti-slop/shadcn` | Register `@shadcn/lint` in the active Oxlint `jsPlugins` or ESLint `plugins`; explicitly enable reviewed `shadcn/*` rules and run the project's UI linter. | [Shadcn linter registration](languages/shadcn/README.md#linter-registration-ppm-owned) |
-| `anti-slop/stylex` | Merge the [Oxlint example](languages/stylex/oxlint.config.example.ts) into the active lint config; set `componentImports` and `tokenModules` for the project and run Oxlint on JS/TS. | [StyleX installation](languages/stylex/README.md#install) |
-| `anti-slop/css` | Install `stylelint` and `stylelint-config-standard` if missing; merge the [Stylelint example](languages/css/stylelint.config.mjs) into the existing config with the project's actual CSS ownership paths; run Stylelint on authored styles. | [CSS installation](languages/css/README.md#install) |
-| `anti-slop/python` | Install Pylint, then run `pylint --load-plugins tools.pylint.anti_slop <owned-python-paths>`; include the verified invocation in the existing lint workflow. | [Python installation](languages/python/README.md) |
-| `anti-slop/rust` | Merge the copied lint profiles into the relevant `Cargo.toml` `[lints.clippy]` and `[lints.rust]` tables (or `[workspace.lints.*]` with member inheritance); run `cargo clippy --all-targets --all-features -- -D warnings`. | [Rust installation](languages/rust/README.md) |
-| `anti-slop/go` | Use the staged module's existing `go.mod`, run `(cd tools/anti-slop && go build -o anti-slop ./cmd/anti-slop)`, then `./tools/anti-slop/anti-slop ./...` on project packages. Add the verified command to lint/CI. | [Go installation](languages/go/README.md) |
+| `typescript` | `mise run lint:typescript` | All active anti-slop TypeScript/JavaScript Oxlint rules; existing project lint preserved. |
+| `shadcn` | `mise run lint:shadcn` | All 19 enhanced shadcn rules, including every Good CSS rule, enforced. |
+| `stylex` | `mise run lint:stylex` | All four official StyleX and five design-system rules; configure project-specific tokens and imports. |
+| `css` | `mise run lint:css` | Complete canonical Stylelint preset: all three anti-slop CSS rules and native Stylelint policies. |
+| `css-tailwind` | `mise run lint:css-tailwind` | Complete strict Tailwind v4 Stylelint preset, limited to `globals.css` and `tokens.css`. |
+| `python` | `mise run lint:python` | Full Pylint anti-slop rule set alongside existing Python tooling. |
+| `rust` | `mise run lint:rust` | Full Clippy/rustc anti-slop policy, loaded from the installed profiles. |
+| `go` | `mise run lint:go` | Full Go analyzer multichecker over project packages. |
+| `landmines` | `mise run lint:landmines` | All eight selected Landmines testing and structure rules. |
+| `codehygiene` | `mise run review:codehygiene path/to/file` | Full pinned CodeHygiene advisory review of selected files. |
 
-These setup entries preserve project-owned lint configuration. Keep existing rules, thresholds, framework parsers and CI tasks when adding checks. Only claim a setup is enforcing rules after verifying its active linter reports a representative violation.
+Every setup installs its Mise task under `.mise/tasks/lint/` or
+`.mise/tasks/review/`, preserving the target's existing `mise.toml`.
+Node task entries delegate to their installed `package.json` scripts; those
+scripts also join the existing aggregate `lint` command using the target's
+detected package manager. CodeHygiene is deliberately an advisory review task,
+not an unconditional lint gate.
+
+The owning project's CI must invoke its aggregate `lint` task or the relevant
+native `mise`/shell checks. Stackforge does not overwrite existing workflows or
+replace existing linters. A target with different dependency versions or
+incompatible configuration gets a reviewable conflict. Existing installations
+must be updated with `stackforge setup update anti-slop/<setup>`; source sync
+alone does not change target projects.
+
+Validation executes the installed commands; a clean result does not prove that
+every optional rule is suitable for the application's design system. Review
+project-specific token paths, Tailwind architecture, and existing violations.
 
 To inspect available skills first:
 

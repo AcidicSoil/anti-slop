@@ -1,0 +1,3 @@
+["lint:rust"]
+description = "Run anti-slop Clippy and rustc checks"
+run = "bash tools/anti-slop/rust/lint.sh"

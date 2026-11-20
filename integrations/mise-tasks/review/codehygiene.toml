@@ -1,0 +1,3 @@
+["review:codehygiene"]
+description = "Review the selected changed files using CodeHygiene (advisory)"
+run = "bash tools/anti-slop/codehygiene/run.sh"

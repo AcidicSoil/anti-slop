@@ -12,7 +12,9 @@ Rules:
 - `no-conditional-empty-dict-unpack` (conditional `**` unpack with a literal `{}` branch)
 - `no-known-value-widening` (local `Any` annotated with a provably known value; excludes uncertain imports/reassignments)
 
-Install Pylint with the existing Python package manager, copy `anti_slop.py` to `tools/pylint/anti_slop.py`, and run:
+Applying the Stackforge Python setup copies `anti_slop.py` to
+`tools/pylint/anti_slop.py`, installs a pinned `uvx` Pylint runner, verifies
+it, and registers `mise run lint:python`. The direct underlying invocation is:
 
 ```bash
 pylint --load-plugins tools.pylint.anti_slop <owned-python-paths>

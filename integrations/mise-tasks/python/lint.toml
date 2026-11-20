@@ -1,0 +1,3 @@
+["lint:python"]
+description = "Run anti-slop Python Pylint checks"
+run = "bash tools/pylint/lint.sh"

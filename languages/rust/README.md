@@ -2,8 +2,13 @@
 
 Rust uses maintained Clippy and rustc lints rather than a custom parser or a Dylint engine.
 
-Merge `anti-slop-clippy.toml` into `[workspace.lints.clippy]` or `[lints.clippy]`.
-Merge `anti-slop-rust.toml` into the corresponding `[workspace.lints.rust]` or `[lints.rust]` table. Preserve stronger existing settings and unrelated lints. In workspaces, make member packages inherit workspace lints with `[lints] workspace = true` where needed.
+Stackforge applies the Rust setup by installing the Clippy/rustc profiles
+and a shell runner, executing the strict lint check, and registering
+`mise run lint:rust` as a file task. It preserves existing Cargo lint
+configuration; the runner applies the packaged denied lints via Clippy command
+arguments. To embed them in native Cargo manifest lint settings as well,
+merge the profiles into `[workspace.lints.*]` or `[lints.*]` in a
+project-specific review, preserving stronger existing settings.
 
 ```bash
 cargo clippy --all-targets --all-features -- -D warnings

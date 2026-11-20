@@ -1,0 +1,3 @@
+["lint:typescript"]
+description = "Run all enabled anti-slop typescript lint rules"
+run = "npm run lint:anti-slop"

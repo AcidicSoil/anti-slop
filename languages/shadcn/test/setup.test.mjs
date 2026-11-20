@@ -44,3 +44,12 @@ test('agent skill guidance complements lint without automatic framework migratio
   assert.ok(cssInstall.includes('good-css'));
   assert.ok(cssInstall.includes('better-typography'));
 });
+
+test('Stackforge activates every packaged shadcn rule', async () => {
+  const { plugin } = await import('@shadcn/lint');
+  const { default: config } = await import('../oxlint.config.mjs');
+  const expected = Object.keys(plugin.rules).map((name) => `shadcn/${name}`).sort();
+  assert.equal(expected.length, 19);
+  assert.deepEqual(Object.keys(config.rules).sort(), expected);
+  assert.ok(Object.values(config.rules).every((severity) => severity === 'error'));
+});
