@@ -25,3 +25,5 @@
 
 ## Outstanding policy posture
 This is task evidence for a focused CSS lint-rule implementation, **not a claim of repository-wide OrchestKit compliance**. The existing `policy:dependency-cruiser`, `policy:cccc-complexity`, `policy:import-paths`, and `policy:voidzero-toolchain` integration requirements have not been certified or silently waived. Their project-wide adoption needs separately scoped tooling work.
+
+> 2026-11-20: The CSS tests moved from `languages/css/tests/` to `languages/css/test/` to satisfy the existing Landmines test-directory rule. The verification commands above describe the earlier run; the active `test:css` command uses the new path.

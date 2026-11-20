@@ -57,7 +57,7 @@ syncDirectory(
 syncDirectory(
   join(root, "languages/css"),
   join(root, "skills/install-anti-slop-css/assets/anti-slop-css"),
-  (path) => extname(path) === ".mjs" && !path.split(/[\\/]/).includes("tests") && !path.endsWith("/stylelint.config.mjs"),
+  (path) => extname(path) === ".mjs" && !path.endsWith(".test.mjs") && !path.endsWith("/stylelint.config.mjs"),
 );
 
 syncFile(
