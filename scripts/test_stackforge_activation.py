@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "stackforge.setups.toml"
 
-NODE_SETUPS = {"typescript", "shadcn", "stylex", "css", "css-tailwind", "landmines"}
+NODE_SETUPS = {"typescript", "effect", "shadcn", "stylex", "css", "css-tailwind", "landmines"}
 NATIVE_SETUPS = {"python", "rust", "go"}
 
 
@@ -16,7 +16,7 @@ class StackforgeActivationTest(unittest.TestCase):
         self.setups = tomllib.loads(MANIFEST.read_text())["setups"]
 
     def test_every_setup_has_verification_and_existing_assets(self):
-        self.assertEqual(len(self.setups), 10)
+        self.assertEqual(len(self.setups), 11)
         for name, setup in self.setups.items():
             with self.subTest(name=name):
                 self.assertTrue(setup["activation"]["verify"])
@@ -71,6 +71,37 @@ class StackforgeActivationTest(unittest.TestCase):
         )
         self.assertIn("oxc-parser", setup["package_json"]["devDependencies"])
         self.assertTrue((ROOT / "src/check-suppressions.mjs").exists())
+
+    def test_effect_setup_uses_existing_plugin_and_official_diagnostics_in_one_pass(self):
+        setup = self.setups["effect"]
+        files = setup["files"]
+        self.assertEqual(files["tools/oxlint/anti-slop"], "src")
+        self.assertEqual(files["oxlint.anti-slop.config.ts"], "integrations/oxlint.config.ts")
+        config = (ROOT / files["oxlint.anti-slop.effect.config.ts"]).read_text()
+        self.assertIn('from "@effect/tsgo/oxlint-presets"', config)
+        self.assertIn("...baseConfig,", config)
+        self.assertIn("extends: [recommended]", config)
+        self.assertIn("...(baseConfig.jsPlugins ?? [])", config)
+        self.assertIn("...baseConfig.rules", config)
+        self.assertIn('specifier: "./tools/oxlint/anti-slop/effect/index.ts"', config)
+        for rule in (
+            "no-manual-effect-error-tag",
+            "no-manual-tag-comparison",
+            "no-manual-tagged-construction",
+            "no-service-constructor-imports",
+            "prefer-effect-match",
+        ):
+            self.assertIn(f'"anti-slop-effect/{rule}": "error"', config)
+        deps = setup["package_json"]["devDependencies"]
+        for package in ("@effect/tsgo", "oxlint", "oxlint-tsgolint", "@oxlint/plugins", "typescript"):
+            self.assertIn(package, deps)
+        command = setup["package_json"]["scripts"]["lint:anti-slop"]
+        self.assertEqual(
+            command,
+            "node tools/oxlint/anti-slop/check-suppressions.mjs && "
+            "effect-tsgo oxlint --config oxlint.anti-slop.effect.config.ts .",
+        )
+        self.assertNotIn("prepare", setup["package_json"]["scripts"])
 
     def test_codehygiene_keeps_advisory_semantics(self):
         setup = self.setups["codehygiene"]

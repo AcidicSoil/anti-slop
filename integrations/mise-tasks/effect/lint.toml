@@ -1,0 +1,3 @@
+["lint:effect"]
+description = "Run generic and Effect anti-slop rules with official @effect/tsgo diagnostics"
+run = "npm run lint:anti-slop"

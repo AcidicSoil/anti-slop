@@ -94,6 +94,7 @@ stackforge setup apply anti-slop/<setup> --target /path/to/project
 | Setup | Mise task | Provided coverage |
 | --- | --- | --- |
 | `typescript` | `mise run lint:typescript` | All active anti-slop TypeScript/JavaScript Oxlint rules; existing project lint preserved. |
+| `effect` | `mise run lint:effect` | For Effect projects **instead of** `typescript`: generic anti-slop, five custom Effect architecture rules, and official type-aware `@effect/tsgo` diagnostics in one pass. |
 | `shadcn` | `mise run lint:shadcn` | All 19 enhanced shadcn rules, including every Good CSS rule, enforced. |
 | `stylex` | `mise run lint:stylex` | All four official StyleX and five design-system rules; configure project-specific tokens and imports. |
 | `css` | `mise run lint:css` | Complete canonical Stylelint preset: all three anti-slop CSS rules and native Stylelint policies. |
@@ -207,6 +208,8 @@ export default defineConfig({
 Oxlint type-aware linting requires TypeScript 7.0 or newer. Keep `oxlint-tsgolint` compatible with the project's TypeScript version rather than forcing the repository's own pinned type-aware backend onto every consumer.
 
 ### Optional Effect rules
+
+The [`anti-slop/effect` Stackforge setup](integrations/effect/README.md) activates both the five custom rules below **and** the official `@effect/tsgo` recommended preset in a single Oxlint pass. Choose it instead of `anti-slop/typescript` for directly Effect-dependent projects, avoiding duplicate lint execution. The `typescript` setup stays framework-independent.
 
 Effect-specific rules live in a separate plugin so projects that do not use Effect do not inherit Effect architecture policy. Register the Effect entry point only in repositories that use Effect:
 

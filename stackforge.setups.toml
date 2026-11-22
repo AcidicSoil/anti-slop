@@ -23,6 +23,36 @@ verify = [["node-package-manager", "run", "lint:anti-slop"]]
 "tools/oxlint/anti-slop" = "src"
 "tools/oxlint/anti-slop/LICENSE" = "LICENSE"
 
+# Select this instead of typescript for projects directly using Effect.
+# Its single lint pass combines the shared generic rules, custom Effect
+# architecture checks, and official type-aware Effect diagnostics.
+[setups.effect]
+description = "Effect-aware TypeScript lint; generic anti-slop, custom Effect rules, and official @effect/tsgo diagnostics in one pass."
+
+[setups.effect.package_json.devDependencies]
+"@effect/tsgo" = "0.67.4"
+"typescript" = "7.0.2"
+"oxlint" = "1.90.0"
+"@oxlint/plugins" = "1.90.0"
+"oxlint-tsgolint" = "7.0.2005"
+"oxc-parser" = "0.159.0"
+
+[setups.effect.package_json.scripts]
+"lint:anti-slop" = "node tools/oxlint/anti-slop/check-suppressions.mjs && effect-tsgo oxlint --config oxlint.anti-slop.effect.config.ts ."
+
+[setups.effect.activation.scripts]
+lint = ["lint:anti-slop"]
+
+[setups.effect.activation]
+verify = [["node-package-manager", "run", "lint:anti-slop"]]
+
+[setups.effect.files]
+".mise/tasks/lint/effect.toml" = "integrations/mise-tasks/effect/lint.toml"
+"oxlint.anti-slop.config.ts" = "integrations/oxlint.config.ts"
+"oxlint.anti-slop.effect.config.ts" = "integrations/effect/oxlint.config.ts"
+"tools/oxlint/anti-slop" = "src"
+"tools/oxlint/anti-slop/LICENSE" = "LICENSE"
+
 [setups.shadcn]
 description = "Full enhanced shadcn lint; activates all rules exported by the packaged plugin."
 
