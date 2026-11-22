@@ -11,9 +11,12 @@ Choose **one** JavaScript/TypeScript setup:
 
 ```sh
 stackforge setup sync anti-slop
+stackforge setup recommend --target /path/to/effect-project
 stackforge setup apply anti-slop/effect --target /path/to/effect-project --dry-run
 stackforge setup apply anti-slop/effect --target /path/to/effect-project
 ```
+
+Stackforge recommends this setup when project manifests declare both `effect` and `typescript` (including supported workspace packages), with a short "Effect + TypeScript" note beside the match. Recommendations are advisory; preview and explicitly approve installation as usual.
 
 The Effect setup installs the same canonical `src/` plugin tree and generic rule config as the TypeScript setup. Its additional `oxlint.anti-slop.effect.config.ts` merges the generic configuration at the root and extends the official `recommended` preset, then registers `anti-slop-effect` at error severity. The active `lint:anti-slop` command runs the existing suppression preflight followed by `effect-tsgo oxlint` and is registered in the aggregate `lint` script and `mise run lint:effect`.
 

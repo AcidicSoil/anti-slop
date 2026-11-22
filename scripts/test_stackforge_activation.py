@@ -72,6 +72,17 @@ class StackforgeActivationTest(unittest.TestCase):
         self.assertIn("oxc-parser", setup["package_json"]["devDependencies"])
         self.assertTrue((ROOT / "src/check-suppressions.mjs").exists())
 
+    def test_effect_setup_recommendation_requires_direct_effect_dependency(self):
+        setup = self.setups["effect"]
+        self.assertEqual(
+            setup["recommendation"],
+            {
+                "dependencies": ["effect", "typescript"],
+                "note": "Effect + TypeScript",
+            },
+        )
+        self.assertNotIn("effect", self.setups["typescript"].get("recommendation", {}).get("dependencies", []))
+
     def test_effect_setup_uses_existing_plugin_and_official_diagnostics_in_one_pass(self):
         setup = self.setups["effect"]
         files = setup["files"]

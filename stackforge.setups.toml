@@ -29,6 +29,10 @@ verify = [["node-package-manager", "run", "lint:anti-slop"]]
 [setups.effect]
 description = "Effect-aware TypeScript lint; generic anti-slop, custom Effect rules, and official @effect/tsgo diagnostics in one pass."
 
+[setups.effect.recommendation]
+dependencies = ["effect", "typescript"]
+note = "Effect + TypeScript"
+
 [setups.effect.package_json.devDependencies]
 "@effect/tsgo" = "0.67.4"
 "typescript" = "7.0.2"
