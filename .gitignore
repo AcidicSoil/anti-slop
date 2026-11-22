@@ -7,3 +7,9 @@ dist/
 __pycache__/
 *.pyc
 .design/
+.repowise/
+.github/copilot-instructions.md
+.vscode/
+.codex/
+.claude/
+AGENTS.md
