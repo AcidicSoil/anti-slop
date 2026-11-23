@@ -100,7 +100,7 @@ stackforge setup list
 
 ### Activate Stackforge setups
 
-Choose the applicable setups with the [project setup selection statechart](docs/setup-selection-statechart.md) before applying them.
+Choose applicable setups with the [compact statechart](docs/setup-selection-statechart.md) or the [complete-options variant](docs/setup-selection-all-options.md) before applying them.
 
 Applying a selected setup now installs its dependencies and rule files, registers
 the applicable standalone lint configuration, wires Node checks into the
