@@ -482,11 +482,23 @@ An existing installation is **not** a reason to skip. Every applicable setup fol
 stateDiagram-v2
     direction TB
     [*] --> Applicable
-    state "Applicable to this workspace?" as Applicable <<choice>>
+    state "Candidate compatible with target?" as Applicable <<choice>>
     state "Not applicable (record evidence)" as NotApplicable
+    state "Source recommendation?" as Evidence <<choice>>
+    state "Prompt user or agent: include missing setup? y/n" as Ask <<choice>>
+    state "Declined (do not install)" as Declined
+    state "Await explicit headless answer" as Await
     state "Compare desired and current state" as Compare
-    Applicable --> NotApplicable: No relevant source or contract
-    Applicable --> Compare: Yes
+    Applicable --> NotApplicable: Incompatible target or no pending setup
+    Applicable --> Evidence: Candidate has a pending difference
+    Evidence --> Compare: Declared requirements matched
+    Evidence --> NotApplicable: Declared requirements not matched
+    Evidence --> Ask: No rule but setup may apply
+    Ask --> Compare: y / --include-possible
+    Ask --> Declined: n / --skip-possible
+    Ask --> Await: No answer in headless run
+    Await --> Ask: User or agent supplies y/n
+    Declined --> [*]
     state "Installed with accepted baseline?" as Installed <<choice>>
     Compare --> Installed
     state "Stackforge update preview" as Update
@@ -517,7 +529,7 @@ stateDiagram-v2
     NotApplicable --> [*]
 ```
 
-**Evidence-matched batch:** Run `stackforge setup recommend --target <project>` to list source-declared matches, then `stackforge setup update --recommended --target <project> --dry-run` to preview missing requirements and updates together. After reviewing all conflicts and approvals, omit `--dry-run` to apply the safe batch. Only setups with matching recommendation metadata enter this selection; review unannotated options from the complete catalog manually.
+**Evidence-matched batch with y/n review:** Run `stackforge setup recommend --target <project>` to list both evidence-backed `recommendations` and `possible_setups` whose recommendation rules are absent but whose planner finds missing changes or conflicts. Then run `stackforge setup update --recommended --target <project> --dry-run` to preview actual changes. In a terminal, applying asks `Include this setup for reconciliation? [y/N]` for each uncertain option. Agents/headless clients answer yes with `--include-possible SOURCE/SETUP` and no to the other candidates with `--skip-possible` before applying. Missing answers block headless writes. A failed declared evidence rule does not produce a speculative prompt. Always review overlaps and conflicts before changes.
 
 **Existing and installed:** Run `stackforge setup update <source>/<setup> --target <project> --dry-run` to classify changes using the accepted baseline. Preview `stackforge setup update --all --source <source> --target <project> --dry-run` for installed selections across a source. When the plan has only safe changes and the project change has been approved, apply with `stackforge setup update ...`. An installed setup may have missing script links, missing files, or changed upstream content; those must be repaired by the update planner.
 
