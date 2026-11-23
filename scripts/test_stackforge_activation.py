@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "stackforge.setups.toml"
 
-NODE_SETUPS = {"typescript", "effect", "shadcn", "stylex", "css", "css-tailwind", "landmines"}
+NODE_SETUPS = {"cloudflare", "typescript", "effect", "shadcn", "stylex", "css", "css-tailwind", "landmines"}
 NATIVE_SETUPS = {"python", "rust", "go"}
 
 
@@ -16,7 +16,7 @@ class StackforgeActivationTest(unittest.TestCase):
         self.setups = tomllib.loads(MANIFEST.read_text())["setups"]
 
     def test_every_setup_has_verification_and_existing_assets(self):
-        self.assertEqual(len(self.setups), 11)
+        self.assertEqual(set(self.setups), NODE_SETUPS | NATIVE_SETUPS | {"codehygiene"})
         for name, setup in self.setups.items():
             with self.subTest(name=name):
                 self.assertTrue(setup["activation"]["verify"])
@@ -61,6 +61,20 @@ class StackforgeActivationTest(unittest.TestCase):
                     )
                 else:
                     self.assertEqual(invocation, " ".join(setup["activation"]["verify"][0][:2]))
+
+    def test_cloudflare_setup_uses_published_preset_without_vendoring(self):
+        setup = self.setups["cloudflare"]
+        deps = setup["package_json"]["devDependencies"]
+        self.assertRegex(deps["@cloudflare/oxlint-config"], r"^\d+\.\d+\.\d+$")
+        self.assertIn("oxlint", deps)
+        self.assertIn("tsrs", deps)
+        self.assertNotIn("@oxlint/plugins", deps)
+        self.assertNotIn("tools/oxlint/anti-slop", setup["files"])
+        config = (ROOT / setup["files"]["oxlint.cloudflare.config.ts"]).read_text()
+        self.assertIn("extends: [cloudflare]", config)
+        self.assertIn("env: cloudflare.env", config)
+        self.assertIn("...cloudflare.ignorePatterns", config)
+        self.assertNotIn("anti-slop/", config)
 
     def test_typescript_setup_enforces_suppression_preflight(self):
         setup = self.setups["typescript"]

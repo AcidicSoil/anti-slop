@@ -1,0 +1,3 @@
+["lint:cloudflare"]
+description = "Run Cloudflare Oxlint preset for TypeScript and JavaScript"
+run = "npm run lint:cloudflare"

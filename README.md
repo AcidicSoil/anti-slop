@@ -11,18 +11,39 @@ Anti-slop is first and foremost the ruleset I use with my work, projects, and te
 
 **This project is meant to be vendored**, not treated as a fixed npm dependency. There is no official npm package. Copy the rules into your repository, read them, and change them to match your team's standards. The bundled agent skill handles the initial copy and configuration; after that, the vendored files are yours to maintain and make your own. Community-maintained forks and packages are welcome, but their compatibility and release lifecycle belong to their maintainers.
 
+## Choose the TypeScript/JavaScript baseline
+
+For general TypeScript and JavaScript projects, use the published
+[`@cloudflare/oxlint-config`](https://github.com/cloudflare/oxlint-config). Its
+[official migration skill](https://github.com/cloudflare/oxlint-config/blob/main/skills/migrate-oxlint-config/SKILL.md)
+handles existing lint configurations. The preset provides native and type-aware
+Oxlint checks, rather than shipping the individual custom anti-slop rules.
+Review the actual diagnostics before replacing an existing bespoke policy.
+
+This fork's `typescript` setup and `install-anti-slop` skill are **opt-in** for
+specific vendored anti-slop rules the Cloudflare preset does not enforce.
+Choose **one baseline**, not two aggregate lint passes. The specialized Effect,
+CSS, StyleX, shadcn, Python, Rust, Go, Landmines, and CodeHygiene integrations
+remain independent choices.
+
+Cloudflare's current standalone setup requires Node.js 22.18+ (or 24+),
+Oxlint 1.94+, and the `tsrs` type-aware backend. Keep an existing compiler/type
+check and migrate dependency versions deliberately. The Stackforge
+`cloudflare` setup below stages the published preset separately from our legacy
+Oxlint plugin setup.
+
 ## Supported languages
 
 | Language | Implementation | Skill |
 | --- | --- | --- |
-| TypeScript / JavaScript | Oxlint plugin | `install-anti-slop` |
+| TypeScript / JavaScript | Cloudflare preset by default; vendored Oxlint plugin for additional rules | [Cloudflare migration skill](https://github.com/cloudflare/oxlint-config/blob/main/skills/migrate-oxlint-config/SKILL.md) / `install-anti-slop` (opt-in) |
 | CSS | Stylelint plugin | `install-anti-slop-css` |
 | StyleX | Official StyleX rules and the standalone design-system plugin | `install-anti-slop-stylex` |
 | Python | Pylint / Astroid checker | `install-anti-slop-python` |
 | Rust | Clippy and rustc lint profiles | `install-anti-slop-rust` |
 | Go | `go/analysis` multichecker | `install-anti-slop-go` |
 
-Install the language you want:
+Install only the specialized anti-slop language rules you need:
 
 ```bash
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop
@@ -53,13 +74,13 @@ Eight compatible rules are enabled for this repository. Consumers can opt in wit
 
 [CodeHygiene](https://github.com/brianbell-x/codehygiene) adds an experimental, local structural-readability check for touched files across TypeScript, JavaScript, Python, Rust, Go, and other languages. The separate `anti-slop/codehygiene` Stackforge setup stages a pinned `uvx` launcher and usage guide without installing any project packages or enabling any automatic checks. See the [CodeHygiene integration guide](integrations/codehygiene/README.md).
 
-## Install with an agent skill
+## Opt in to vendored TypeScript/JavaScript rules
 
 ```bash
 npx skills add AcidicSoil/anti-slop --skill install-anti-slop
 ```
 
-Then ask your coding agent to install or configure anti-slop in the current repository. The skill copies the plugin, installs compatible Oxlint dependencies—matching an existing Oxlint version when present—merges the plugin into the existing lint configuration, enables every generic rule, and validates the result. In repositories that depend directly on Effect, it also enables the opt-in Effect rule group.
+Use this only when the published Cloudflare preset does not cover a required rule. Then ask your coding agent to install or configure anti-slop in the current repository. The skill copies the plugin, installs compatible Oxlint dependencies—matching an existing Oxlint version when present—merges the plugin into the existing lint configuration, enables every generic rule, and validates the result. In repositories that depend directly on Effect, it also enables the opt-in Effect rule group.
 
 ### Update an existing installation
 
@@ -79,6 +100,8 @@ stackforge setup list
 
 ### Activate Stackforge setups
 
+Choose the applicable setups with the [project setup selection statechart](docs/setup-selection-statechart.md) before applying them.
+
 Applying a selected setup now installs its dependencies and rule files, registers
 the applicable standalone lint configuration, wires Node checks into the
 existing `package.json` `lint` script, and **executes its verification check**.
@@ -93,7 +116,8 @@ stackforge setup apply anti-slop/<setup> --target /path/to/project
 
 | Setup | Mise task | Provided coverage |
 | --- | --- | --- |
-| `typescript` | `mise run lint:typescript` | All active anti-slop TypeScript/JavaScript Oxlint rules; existing project lint preserved. |
+| `cloudflare` | `mise run lint:cloudflare` | **Recommended** general TS/JS preset from npm; pins compatible Oxlint and `tsrs`. Choose instead of `typescript`. |
+| `typescript` | `mise run lint:typescript` | Opt-in vendored anti-slop TypeScript/JavaScript rules for requirements not covered by Cloudflare. |
 | `effect` | `mise run lint:effect` | For Effect projects **instead of** `typescript`: generic anti-slop, five custom Effect architecture rules, and official type-aware `@effect/tsgo` diagnostics in one pass. |
 | `shadcn` | `mise run lint:shadcn` | All 19 enhanced shadcn rules, including every Good CSS rule, enforced. |
 | `stylex` | `mise run lint:stylex` | All four official StyleX and five design-system rules; configure project-specific tokens and imports. |
@@ -112,6 +136,12 @@ scripts also join the existing aggregate `lint` command using the target's
 detected package manager. CodeHygiene is deliberately an advisory review task,
 not an unconditional lint gate.
 
+Cloudflare's setup is a separate choice. Do not apply it alongside the
+vendored TypeScript or Effect setup solely for duplicate general linting. Its
+versioned dependencies may conflict with an existing Oxlint installation;
+review a dry run rather than forcing replacements. The preset does not
+supersede the project's existing TypeScript typecheck.
+
 The owning project's CI must invoke its aggregate `lint` task or the relevant
 native `mise`/shell checks. Stackforge does not overwrite existing workflows or
 replace existing linters. A target with different dependency versions or
@@ -129,7 +159,7 @@ To inspect available skills first:
 npx skills add AcidicSoil/anti-slop --list
 ```
 
-## Manual local installation
+## Manual vendored anti-slop installation (opt-in)
 
 Copy `src/` into the target repository, for example at `tools/oxlint/anti-slop/`. Run `node tools/oxlint/anti-slop/check-suppressions.mjs` before Oxlint in the active lint command, and install compatible `oxc-parser` as a development dependency. If the repository already uses `oxlint`, install `@oxlint/plugins` at exactly the resolved Oxlint version. Otherwise, install the same current version of both packages. Keep both versions exact so upgrades move them together.
 

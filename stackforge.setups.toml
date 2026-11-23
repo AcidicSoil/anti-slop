@@ -1,7 +1,31 @@
 version = 1
 
+# Recommended for general TypeScript/JavaScript linting. This is an alternative
+# to the vendored anti-slop TypeScript setup, not an additional lint pass.
+[setups.cloudflare]
+description = "Recommended general TypeScript/JavaScript linting with the published Cloudflare Oxlint preset; requires Node 22.18+ or 24+."
+
+[setups.cloudflare.package_json.devDependencies]
+"@cloudflare/oxlint-config" = "0.2.0"
+"oxlint" = "1.94.0"
+"tsrs" = "7.1.0-beta.tsrs4"
+
+[setups.cloudflare.package_json.scripts]
+"lint:cloudflare" = "oxlint --config oxlint.cloudflare.config.ts ."
+
+[setups.cloudflare.activation.scripts]
+lint = ["lint:cloudflare"]
+
+[setups.cloudflare.activation]
+verify = [["node-package-manager", "run", "lint:cloudflare"]]
+
+[setups.cloudflare.files]
+".mise/tasks/lint/cloudflare.toml" = "integrations/mise-tasks/cloudflare/lint.toml"
+"oxlint.cloudflare.config.ts" = "integrations/oxlint.cloudflare.config.ts"
+
+# Opt-in only for consumers needing anti-slop-specific diagnostics.
 [setups.typescript]
-description = "TypeScript/JavaScript Oxlint rules; installs the plugin and verifies its dedicated lint command."
+description = "Specialized vendored anti-slop TypeScript/JavaScript rules; choose Cloudflare for general linting."
 
 [setups.typescript.package_json.devDependencies]
 "oxlint" = "1.90.0"
