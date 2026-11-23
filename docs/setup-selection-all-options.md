@@ -517,6 +517,8 @@ stateDiagram-v2
     NotApplicable --> [*]
 ```
 
+**Evidence-matched batch:** Run `stackforge setup recommend --target <project>` to list source-declared matches, then `stackforge setup update --recommended --target <project> --dry-run` to preview missing requirements and updates together. After reviewing all conflicts and approvals, omit `--dry-run` to apply the safe batch. Only setups with matching recommendation metadata enter this selection; review unannotated options from the complete catalog manually.
+
 **Existing and installed:** Run `stackforge setup update <source>/<setup> --target <project> --dry-run` to classify changes using the accepted baseline. Preview `stackforge setup update --all --source <source> --target <project> --dry-run` for installed selections across a source. When the plan has only safe changes and the project change has been approved, apply with `stackforge setup update ...`. An installed setup may have missing script links, missing files, or changed upstream content; those must be repaired by the update planner.
 
 **New or unbased:** Run `stackforge setup apply <source>/<setup> --target <project> --dry-run` to compare the desired configuration with existing project state. It adds missing structured fields and files without deleting unrelated values. An unmanaged file with different content is a conflict, not permission to overwrite it. If matching required values are already present, record them as satisfied and leave them unchanged.
