@@ -20,6 +20,17 @@ handles existing lint configurations. The preset provides native and type-aware
 Oxlint checks, rather than shipping the individual custom anti-slop rules.
 Review the actual diagnostics before replacing an existing bespoke policy.
 
+**Retention policy:** Keep every rule, analyzer, fixture, installer, and integration
+we have authored or extended. A newer preset, a similarly named rule, or a
+maintainer recommendation is not evidence of equivalent coverage. Retire any
+of our authored behavior only after a reproducible rule-by-rule comparison
+shows that its replacement detects the same intended violations and accepts
+the same valid cases, with the replacement enabled at the intended severity in
+the actual consuming lint command and CI. Record the tests, versions, scope,
+and migration decision before removing an implementation or its setup. If
+parity is partial or unproven, retain our rule and avoid duplicate diagnostics
+by integrating it into the existing lint pass.
+
 This fork's `typescript` setup and `install-anti-slop` skill are **opt-in** for
 specific vendored anti-slop rules the Cloudflare preset does not enforce.
 Choose **one baseline**, not two aggregate lint passes. The specialized Effect,

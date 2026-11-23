@@ -131,6 +131,8 @@ stateDiagram-v2
 | Test/structure companion | `landmines`; none | Explicit opt-in and compatible JS/TS lint configuration |
 | Readability companion | `codehygiene` advisory; `codehygiene` with approved `--check` gate; none | Explicit opt-in; separate approval for gating |
 
+**Retention gate:** Preserve all locally authored rules, analyzers, tests, and integrations across setup choices. Never remove one on the basis of an overlapping name or new preset alone. Require reproducible accepting/rejecting fixture parity, confirmed enabled diagnostics in consumer lint/CI, and recorded replacement evidence. Keep complementary rules when parity is partial or unknown.
+
 **Valid combinations:** Python, Rust, and Go setups are independently additive. `shadcn` and `stylex` can both be applicable in a mixed-styling workspace. Their installation must preserve existing styling and avoid duplicate lint checks. `css` and `css-tailwind` are mutually exclusive **per CSS ownership scope**, as are `cloudflare`, `typescript`, and `effect` as fresh JS/TS baseline setups.
 
 **Compatibility review is mandatory:** The published Stackforge setups currently pin different Oxlint versions (`cloudflare` uses 1.94.0; several companions use 1.90.0). A selected combination is a *candidate*, not a guaranteed compatible installation. Merge compatible rules into the existing pass, update versions with approval, or leave the conflicting setup unapplied. Never force-replace an incumbent toolchain.

@@ -62,7 +62,7 @@ stateDiagram-v2
 
 | Evidence in the target workspace | Setup selection |
 | --- | --- |
-| Existing lint or vendored anti-slop configuration | Preserve and update or merge into the **existing pass**. Migration to another core strategy is a separate approved change. |
+| Existing lint or vendored anti-slop configuration | Preserve and update or merge into the **existing pass**. Migration to another core strategy is a separate approved change, with authored rule coverage retained unless equivalence is demonstrated against real fixtures and active lint/CI execution. |
 | Fresh JS/TS application, compatible with the published preset | Prefer `cloudflare` for general lint. This is the default candidate, **not** an extra pass over `typescript`. |
 | JS/TS source needs anti-slop rules beyond Cloudflare | Choose `typescript` instead, after reviewing the specific rules and accepting vendored ownership. |
 | Direct `effect` dependency and approved official type-aware diagnostics | Choose `effect` **instead of** `typescript`. The setup combines generic anti-slop, Effect architecture rules, and `@effect/tsgo` in one pass. |
