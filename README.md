@@ -111,7 +111,7 @@ stackforge setup list
 
 ### Activate Stackforge setups
 
-Choose applicable setups with the [compact statechart](docs/setup-selection-statechart.md) or the [complete-options variant](docs/setup-selection-all-options.md) before applying them.
+Choose applicable setups with the [compact anti-slop statechart](docs/setup-selection-statechart.md) or the [complete project-tooling variant](docs/setup-selection-all-options.md), which also covers Stackforge quality, Stylelint, Oxfmt, Knip, CCCC, testing, and CI.
 
 Applying a selected setup now installs its dependencies and rule files, registers
 the applicable standalone lint configuration, wires Node checks into the

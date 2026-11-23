@@ -11,7 +11,7 @@ stateDiagram-v2
     state "Choose one JS/TS lint strategy" as Core <<choice>>
     Inspect --> Core: Workspace evidence collected
 
-    state "Keep and adapt incumbent lint" as Existing
+    state "Compare and reconcile existing lint" as Existing
     state "cloudflare" as Cloudflare
     state "typescript" as TypeScript
     state "effect" as Effect
@@ -46,13 +46,16 @@ stateDiagram-v2
     UI --> Optional: shadcn for Tailwind v4 UI; stylex when used
     state "Preview planned setups" as Preview
     Optional --> Preview: Landmines and CodeHygiene only by opt-in
+    state "Reconcile existing and missing requirements" as Reconcile
+    Preview --> Reconcile: Compare installed state to selected setups
 
     state "Review conflicts or missing approval" as Review
     state "Apply to target project" as Apply
     state "Verify actual installed checks" as Verify
-    Preview --> Review: Conflict, incompatible versions, or no approval
+    Reconcile --> Review: Conflict, incompatible versions, or no approval
     Review --> Inspect: Revise selection; preserve incumbents
-    Preview --> Apply: Dry-run reviewed and approved
+    Reconcile --> Apply: Missing differences safely mergeable and approved
+    Reconcile --> Verify: Already equivalent, rerun actual checks
     Apply --> Review: Activation or verification failed
     Apply --> Verify: All selected checks passed
     Verify --> [*]
@@ -81,7 +84,8 @@ stateDiagram-v2
 2. Keep exactly one owning JS/TS core lint pass and at most one CSS architecture preset per workspace. Other applicable setups can coexist without duplicate lint execution.
 3. Preview with `stackforge setup apply anti-slop/<setup> --target <project> --dry-run`. Use the setup's own guide to resolve provenance, installed versions, config ownership, and compatibility.
 4. Require approval for replacing an existing config, enabling opinionated architecture rules, imposing strict stylesheet ownership, or changing an advisory tool into CI enforcement.
-5. Apply only reviewed setups. Run their actual activation checks and the project's existing targeted lint, test, and build commands. Treat a staged file or passing configuration parse as **not yet verified**.
-6. Do not trigger framework migrations, style conversions, global hook changes, or runner/CI rewrites as side effects of this selection.
+5. For **existing** setups use `stackforge setup update <source>/<setup> --target <project> --dry-run` to compare the accepted baseline, local state, and incoming rules. For **new or unbased** setups use `stackforge setup apply <source>/<setup> --target <project> --dry-run`. Apply only approved, safely mergeable missing differences. A config's presence never makes the setup complete.
+6. Run actual activation checks and existing targeted lint, test, and build commands. Replan after applying changes; complete only with zero outstanding differences and passing checks.
+7. Do not trigger framework migrations, style conversions, global hook changes, or runner/CI rewrites as side effects of this selection.
 
-This chart is a **selection and review contract**, not an automated detector. The installed Stackforge/PPM bootstrap owns execution and its compatibility checks. In projects with custom setup ownership, prefer the existing native tooling over a second copy.
+See the [complete-options reconciliation flow](setup-selection-all-options.md#7-reconcile-missing-differences-before-finishing) for explicit merge and conflict branches. This chart is a **selection and review contract**, not an automated detector. The installed Stackforge/PPM bootstrap owns execution and its compatibility checks. In projects with custom setup ownership, prefer the existing native tooling over a second copy.
