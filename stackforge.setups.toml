@@ -211,7 +211,7 @@ verify = [["bash", "tools/anti-slop/codehygiene/run.sh", "--help"]]
 "tools/anti-slop/codehygiene/README.md" = "integrations/codehygiene/README.md"
 
 [setups.landmines]
-description = "Optional Landmines Oxlint checks; installs the upstream plugin and runs its recommended eight rules."
+description = "Optional Landmines Oxlint checks; installs the upstream plugin and runs the curated Landmines rules."
 
 [setups.landmines.package_json.scripts]
 "lint:landmines" = "oxlint --config oxlint.landmines.config.json ."
@@ -224,7 +224,7 @@ verify = [["node-package-manager", "run", "lint:landmines"]]
 
 [setups.landmines.package_json.devDependencies]
 "oxlint" = "1.90.0"
-"@interfere/landmines" = "0.1.0"
+"@interfere/landmines" = "0.3.0"
 
 [setups.landmines.files]
 ".mise/tasks/lint/landmines.toml" = "integrations/mise-tasks/landmines/lint.toml"

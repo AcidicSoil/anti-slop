@@ -171,8 +171,8 @@ importers:
         version: 1.90.0
     devDependencies:
       '@interfere/landmines':
-        specifier: 0.1.0
-        version: 0.1.0(oxlint@1.90.0(oxlint-tsgolint@7.0.2005))
+        specifier: 0.3.0
+        version: 0.3.0(oxlint@1.90.0(oxlint-tsgolint@7.0.2005))
       '@shadcn/lint':
         specifier: file:integrations/shadcn-lint/package
         version: file:integrations/shadcn-lint/package(eslint@10.14.0(supports-color@10.2.2))
@@ -510,8 +510,8 @@ packages:
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
 
-  '@interfere/landmines@0.1.0':
-    resolution: {integrity: sha512-pbKVVTRBlkv395GbApiF9/AY8r9ZS85IlqzRXn4mhuQWFisC6sNEkOUHckXtSaTyhplLrODMrEkbzv0mwOwqew==}
+  '@interfere/landmines@0.3.0':
+    resolution: {integrity: sha512-c1Z+py9yIyYBoFe5Vh39kj1l37MqiC35F0hUWLa2zSn4aH/UwLDVmJ/Badh6Ajvof/Q+/VFps88KVX8YUpWg2A==}
     engines: {node: '>=22.18.0'}
     peerDependencies:
       oxlint: '>=1.81.0'
@@ -1469,6 +1469,9 @@ packages:
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
+  jsonc-parser@3.3.1:
+    resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
+
   keyv@5.6.0:
     resolution: {integrity: sha512-CYDD3SOtsHtyXeEORYRx2qBtpDJFjRTGXUtmNEMGyzYOKj1TE3tycdlho7kA1Ufx9OYWZzg52QFBGALTirzDSw==}
 
@@ -1996,11 +1999,12 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@interfere/landmines@0.1.0(oxlint@1.90.0(oxlint-tsgolint@7.0.2005))':
+  '@interfere/landmines@0.3.0(oxlint@1.90.0(oxlint-tsgolint@7.0.2005))':
     dependencies:
       '@babel/parser': 8.0.4
       '@babel/types': 8.0.4
       '@oxlint/plugins': 1.81.0
+      jsonc-parser: 3.3.1
       oxc-resolver: 11.24.2
       oxlint: 1.90.0(oxlint-tsgolint@7.0.2005)
       zod: 4.6.6
@@ -2723,6 +2727,8 @@ snapshots:
   json-schema-traverse@1.0.0: {}
 
   json-stable-stringify-without-jsonify@1.0.1: {}
+
+  jsonc-parser@3.3.1: {}
 
   keyv@5.6.0:
     dependencies:

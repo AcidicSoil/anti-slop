@@ -79,7 +79,7 @@ CSS uses [three Stylelint architecture rules](languages/css/README.md): styleshe
 
 [Landmines](https://github.com/interfere-inc/landmines) adds checks for test doubles, fixed sleeps, retries, polling without signals, unhandled MSW requests, test placement and naming, and package exports. Anti-slop uses its published Oxlint plugin rather than duplicating the implementation.
 
-Eight compatible rules are enabled for this repository. Consumers can opt in with the [Landmines integration guide](integrations/landmines/README.md) or the `anti-slop/landmines` Stackforge setup, which stages the preset and adds the upstream package as a separate dependency. Its blanket comment ban conflicts with anti-slop's safety-justification rule, and its return-type policy is kept optional. The existing `no-module-mocking` rule remains available for consumers without Landmines.
+Nineteen compatible Landmines 0.3.0 rules are enabled for this repository. Consumers can opt in with the [Landmines integration guide](integrations/landmines/README.md) or the `anti-slop/landmines` Stackforge setup, which stages the preset and adds the upstream package as a separate dependency. Comment, return-type, cold-start and cold-import policies remain optional; see the integration guide for compatibility details. The existing `no-module-mocking` rule remains available for consumers without Landmines.
 
 ## CodeHygiene companion
 
@@ -137,7 +137,7 @@ stackforge setup apply anti-slop/<setup> --target /path/to/project
 | `python` | `mise run lint:python` | Full Pylint anti-slop rule set alongside existing Python tooling. |
 | `rust` | `mise run lint:rust` | Full Clippy/rustc anti-slop policy, loaded from the installed profiles. |
 | `go` | `mise run lint:go` | Full Go analyzer multichecker over project packages. |
-| `landmines` | `mise run lint:landmines` | All eight selected Landmines testing and structure rules. |
+| `landmines` | `mise run lint:landmines` | All 19 selected Landmines correctness, testing and structure rules. |
 | `codehygiene` | `mise run review:codehygiene path/to/file` | Full pinned CodeHygiene advisory review of selected files. |
 
 Every setup installs its Mise task under `.mise/tasks/lint/` or

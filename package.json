@@ -25,7 +25,7 @@
     "@oxlint/plugins": "1.90.0"
   },
   "devDependencies": {
-    "@interfere/landmines": "0.1.0",
+    "@interfere/landmines": "0.3.0",
     "@shadcn/lint": "file:integrations/shadcn-lint/package",
     "@stylexjs/eslint-plugin": "0.19.1",
     "@types/node": "26.6.6",

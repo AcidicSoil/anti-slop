@@ -7,11 +7,11 @@ import { test } from "node:test";
 const root = process.cwd();
 const oxlint = join(root, "node_modules/.bin/oxlint");
 
-function lintFixture(content, configForFixture) {
+function lintFixture(content, configForFixture, filename = "behavior.test.ts") {
   const directory = mkdtempSync(join(root, "landmines-fixture-"));
 
   try {
-    const source = join(directory, "behavior.test.ts");
+    const source = join(directory, filename);
     writeFileSync(source, content);
 
     const configPath = configForFixture?.(directory) ?? ".oxlintrc.json";
@@ -37,7 +37,7 @@ test("the bundled Landmines rules reject dishonest test patterns", () => {
 
   assert.equal(result.status, 1, result.output);
   for (const rule of ["no-flake-masking", "no-fixed-sleep", "no-test-doubles"]) {
-    assert.match(result.output, new RegExp("landmines-testing\\(" + rule + "\\)"));
+    assert.match(result.output, new RegExp("landmines\\(" + rule + "\\)"));
   }
 });
 
@@ -62,6 +62,33 @@ test("Landmines composes with the vendored anti-slop plugin", () => {
   });
 
   assert.equal(result.status, 1, result.output);
-  assert.match(result.output, /landmines-testing\(no-test-doubles\)/);
+  assert.match(result.output, /landmines\(no-test-doubles\)/);
   assert.match(result.output, /anti-slop\(no-reflect-get\)/);
+});
+
+test("the bundled Landmines rules reject skipped assertions", () => {
+  const result = lintFixture('test("loads", () => { if (ready) expect(value).toBe(1); });');
+  assert.equal(result.status, 1, result.output);
+  assert.match(result.output, /landmines\(no-conditional-expect\)/);
+});
+
+test("the bundled Landmines rules reject swallowed production failures", () => {
+  const result = lintFixture('void load().catch(() => {});', undefined, "behavior.ts");
+  assert.equal(result.status, 1, result.output);
+  assert.match(result.output, /landmines\(no-silent-catch\)/);
+});
+
+test("the bundled Landmines rules reject shared timeout signals", () => {
+  const result = lintFixture([
+    'const signal = AbortSignal.timeout(1000);',
+    'test("loads", () => { expect(signal.aborted).toBe(false); });',
+  ].join("\n"));
+
+  assert.equal(result.status, 1, result.output);
+  assert.match(result.output, /landmines\(no-shared-signal\)/);
+});
+
+test("the bundled Landmines rules allow a fresh signal per test", () => {
+  const result = lintFixture('test("loads", () => { const signal = AbortSignal.timeout(1000); expect(signal.aborted).toBe(false); });');
+  assert.equal(result.status, 0, result.output);
 });

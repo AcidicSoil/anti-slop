@@ -16,11 +16,12 @@ class LandminesSetupTest(unittest.TestCase):
 
         self.assertEqual(
             setup["package_json"]["devDependencies"],
-            {"@interfere/landmines": "0.1.0", "oxlint": "1.90.0"},
+            {"@interfere/landmines": "0.3.0", "oxlint": "1.90.0"},
         )
         self.assertEqual(
             setup["files"],
             {
+                ".mise/tasks/lint/landmines.toml": "integrations/mise-tasks/landmines/lint.toml",
                 "tools/oxlint/landmines-recommended.json": CONFIG_PATH,
                 "oxlint.landmines.config.json": "integrations/landmines/oxlint.config.json",
             },
@@ -35,8 +36,16 @@ class LandminesSetupTest(unittest.TestCase):
         self.assertNotIn("@oxlint/plugins", setup["package_json"]["devDependencies"])
 
         selected = json.loads((ROOT / CONFIG_PATH).read_text())
-        self.assertEqual(len(selected["rules"]), 8)
-        self.assertEqual(len(selected["jsPlugins"]), 2)
+        self.assertEqual(selected["jsPlugins"], [
+            {"name": "landmines", "specifier": "@interfere/landmines"},
+        ])
+        for rule in ("no-test-doubles", "no-fixed-sleep", "no-flake-masking",
+                     "no-unsignaled-poll", "strict-msw", "colocated-tests",
+                     "package-exports", "test-file-names", "no-conditional-expect",
+                     "no-silent-catch", "no-shared-signal"):
+            self.assertEqual(selected["rules"][f"landmines/{rule}"], "error")
+        self.assertNotIn("landmines/no-comments", selected["rules"])
+        self.assertNotIn("landmines/no-explicit-return-types", selected["rules"])
 
 
 if __name__ == "__main__":
