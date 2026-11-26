@@ -1,6 +1,6 @@
 # Project setup selection: all valid options
 
-This variant covers the **entire registered project setup stack**, not just anti-slop. The two source catalogs are `stackforge/stackforge.setups.toml` (the registered `stackforge` source) and [`anti-slop/stackforge.setups.toml`](../stackforge.setups.toml). PPM engineering also owns native setup decisions that do not have a Stackforge preset. The manifests and owning install guides remain authoritative. A selected option is **reconcile existing**, **install missing**, or **not applicable**. Existing files always undergo a semantic comparison against required settings before reaching **up to date**.
+This variant covers the **entire registered project setup stack**, not just anti-slop. The two source catalogs are `stackforge/stackforge.setups.toml` (the registered `stackforge` source) and [`anti-slop/stackforge.setups.toml`](../stackforge.setups.toml). PPM engineering also owns native setup decisions that do not have a Stackforge preset. The manifests and owning install guides remain authoritative. A selected option is **reconcile existing**, **install missing**, or **not applicable**. Existing files always undergo a semantic comparison against required settings before reaching **up to date**. For the expanded, repository-derived decision paths across every setup family, start with the [project-pattern decision atlas](setup-selection-project-patterns.md). This document remains the catalog and reconciliation reference.
 
 ## 1. Core quality tooling decisions
 
@@ -109,13 +109,13 @@ stateDiagram-v2
     NativeChoice --> Rust: Rust ownership
     NativeChoice --> Go: Go ownership
     NativeChoice --> Shell: Shell scripts
-    NativeChoice --> None: No native sources
+    NativeChoice --> None: No native sources or all detected languages evaluated
 
     state "Review every detected language independently" as EveryLanguage
-    Python --> EveryLanguage
-    Rust --> EveryLanguage
-    Go --> EveryLanguage
-    Shell --> EveryLanguage
+    Python --> NativeChoice: Record and evaluate next language
+    Rust --> NativeChoice: Record and evaluate next language
+    Go --> NativeChoice: Record and evaluate next language
+    Shell --> NativeChoice: Record and evaluate next language
     None --> EveryLanguage
 
     state "Security and size checks?" as ExtraChoice <<choice>>
@@ -133,7 +133,7 @@ stateDiagram-v2
     CI --> [*]
 ```
 
-A mixed-language workspace may take **several** native branches, even though the chart draws one branch at a time. `React Grab` is a **development-time inspection tool**, not a CI lint gate. `Ruff`, `gofmt`, `go vet`, `cargo fmt`, `Clippy`, `Staticcheck`, `govulncheck`, `ShellCheck`, and `shfmt` are PPM/native tool decisions, not separate anti-slop Stackforge setup IDs. RepoWise is managed globally; use an existing index or seek approval before initialization. See [PPM engineering bootstrap](https://github.com/AcidicSoil/pinchtab-profile-manager/blob/main/.agents/skills/pinchtab-profile-manager-engineering/references/quality-tooling-bootstrap.md) in the local workspace.
+A mixed-language workspace evaluates **every** applicable native branch before proceeding. `React Grab` is a **development-time inspection tool**, not a CI lint gate. `Ruff`, `gofmt`, `go vet`, `cargo fmt`, `Clippy`, `Staticcheck`, `govulncheck`, `ShellCheck`, and `shfmt` are PPM/native tool decisions, not separate anti-slop Stackforge setup IDs. RepoWise is managed globally; use an existing index or seek approval before initialization. See [PPM engineering bootstrap](https://github.com/AcidicSoil/pinchtab-profile-manager/blob/main/.agents/skills/pinchtab-profile-manager-engineering/references/quality-tooling-bootstrap.md) in the local workspace.
 
 ## 3. Specialized anti-slop decisions
 
@@ -311,11 +311,12 @@ stateDiagram-v2
     state "agentic-e2e + knip-e2e when adopted" as AgentE2E
     state "Reconcile existing test config" as ExistingE2E
     E2E --> Playwright: Framework-matched browser tests
-    E2E --> AgentE2E: Approved agentic E2E flow
+    E2E --> AgentE2E: Standalone approved agentic E2E flow
     E2E --> ExistingE2E: Not selected
 
     state "Performance auditing?" as LighthouseChoice <<choice>>
-    Playwright --> LighthouseChoice
+    Playwright --> AgentE2E: Supplement approved
+    Playwright --> LighthouseChoice: No supplemental agentic E2E
     AgentE2E --> LighthouseChoice
     ExistingE2E --> LighthouseChoice
     state "lighthouse / lighthouse-vite" as Lighthouse
@@ -489,8 +490,9 @@ stateDiagram-v2
     state "Declined (do not install)" as Declined
     state "Await explicit headless answer" as Await
     state "Compare desired and current state" as Compare
-    Applicable --> NotApplicable: Incompatible target or no pending setup
-    Applicable --> Evidence: Candidate has a pending difference
+    Applicable --> NotApplicable: Incompatible or genuinely inapplicable target
+    Applicable --> Evidence: Compatible candidate has a pending difference
+    Applicable --> Verify: Applicable and already equivalent
     Evidence --> Compare: Declared requirements matched
     Evidence --> NotApplicable: Declared requirements not matched
     Evidence --> Ask: No rule but setup may apply
@@ -518,13 +520,16 @@ stateDiagram-v2
     Conflict --> Review
     Review --> Compare: Revised selection or approved merge
     state "Apply only calculated delta" as Apply
-    Safe --> Apply
+    Safe --> Apply: Explicit target and approved changes
+    Safe --> Review: Approval or target missing
     state "Verify effective configs and commands" as Verify
     Apply --> Verify
     NoChange --> Verify: Recheck active commands
     state "Replan after apply" as Replan <<choice>>
     Verify --> Replan
-    Replan --> Compare: Missing requirements or failed check
+    Replan --> Compare: Missing requirements or failed check, retry
+    Replan --> PendingRepair: Failed check and work stops
+    PendingRepair --> Compare: Resume from actual target state
     Replan --> [*]: No delta and checks pass
     NotApplicable --> [*]
 ```

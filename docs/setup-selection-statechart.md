@@ -1,6 +1,6 @@
 # Project setup selection statechart
 
-Use this chart to choose **additional** anti-slop and Stackforge setups for each detected workspace. The setup names come from [`stackforge.setups.toml`](../stackforge.setups.toml). The manifest and each install guide remain the authority for files, versions, and activation commands.
+Use this chart to choose **additional** anti-slop and Stackforge setups for each detected workspace. The setup names come from [`stackforge.setups.toml`](../stackforge.setups.toml). The manifest and each install guide remain the authority for files, versions, and activation commands. For the full Stackforge catalog, project-specific profiles and reusable pack selection, use the [repository-derived decision atlas](setup-selection-project-patterns.md). This is the compact lint-selection view, not a complete project setup plan.
 
 ```mermaid
 stateDiagram-v2
@@ -56,9 +56,10 @@ stateDiagram-v2
     Review --> Inspect: Revise selection; preserve incumbents
     Reconcile --> Apply: Missing differences safely mergeable and approved
     Reconcile --> Verify: Already equivalent, rerun actual checks
-    Apply --> Review: Activation or verification failed
-    Apply --> Verify: All selected checks passed
-    Verify --> [*]
+    Apply --> Review: Activation failed
+    Apply --> Verify: Approved changes applied
+    Verify --> Review: Verification failed, repair pending
+    Verify --> [*]: All checks pass and no pending delta
 ```
 
 ## Guard decisions

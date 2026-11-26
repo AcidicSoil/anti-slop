@@ -1,0 +1,28 @@
+stateDiagram-v2
+  s0: Inspect target and evidence
+  s1: Preview selected changes
+  s2: Skip or cancel
+  s3: Review safe or conflicting changes
+  s4: Run actual checks
+  s5: Verified completion
+  s6: Approved target and changes
+  s7: Checks failed
+  s8: Pending repair
+  [*] --> s0
+  s0 --> s1: Select
+  s0 --> s2: Cancel or Select
+  s1 --> s2: Cancel
+  s1 --> s3: Preview
+  s1 --> s4: Preview
+  s2 --> s0: Reuse
+  s3 --> s1: Resolve
+  s3 --> s2: Cancel
+  s3 --> s6: Confirm
+  s4 --> s5: Verify
+  s4 --> s7: Verify
+  s5 --> s0: Reuse
+  s6 --> s2: Cancel
+  s6 --> s4: Apply
+  s7 --> s1: Retry
+  s7 --> s8: Handoff
+  s8 --> s1: Retry
